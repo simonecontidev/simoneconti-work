@@ -1,9 +1,10 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import MenuBtn from "@/components/MenuBtn";
 import useViewTransition from "@/hooks/useViewTransition";
 import { useGsapRegister } from "@/lib/gsap";
+import SlidingTextLink from "@/components/animations/SlidingTextLink";
 
 type LinkItem = { href: string; label: string };
 
@@ -17,11 +18,19 @@ const LINKS: LinkItem[] = [
 export default function Nav() {
   const [isOpen, setIsOpen] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
+  const [hoveredIdx, setHoveredIdx] = useState<number | null>(null); 
+  
   const menuRef = useRef<HTMLDivElement | null>(null);
   const { navigateWithTransition } = useViewTransition();
   const { gsap } = useGsapRegister();
 
-  // lock/unlock scroll (senza lenis/react)
+  // pointer: coarse? (touch)
+  const isCoarse = useMemo(
+    () => (typeof window !== "undefined" ? window.matchMedia("(pointer: coarse)").matches : false),
+    []
+  ); // <-- NEW
+
+  // lock/unlock scroll
   useEffect(() => {
     if (isOpen) {
       document.documentElement.style.overflow = "hidden";
@@ -89,13 +98,13 @@ export default function Nav() {
     setIsOpen((v) => !v);
   }, [isAnimating]);
 
+  // accetta anche l'indice (per eventuale doppio tap mobile se lo vorrai)
   const handleLink = useCallback(
-    (href: string) => {
+    (href: string, _idx?: number) => {
       if (typeof window !== "undefined" && window.location.pathname === href) {
         setIsOpen(false);
         return;
       }
-      // chiudi subito e poi naviga con VT
       setIsOpen(false);
       navigateWithTransition(href);
     },
@@ -111,25 +120,23 @@ export default function Nav() {
       <div
         ref={menuRef}
         className="fixed inset-0 z-[100] clip-path-circle-0 bg-neutral-800/95 p-4 md:p-6 pointer-events-none"
-        // clip-path iniziale gestito via gsap; classe sentinella
       >
         <div className="relative grid h-full w-full grid-rows-[1fr_auto] rounded-3xl border border-white/10 bg-neutral-900 p-6 md:p-10">
           {/* Links col */}
           <div className="flex flex-col justify-center gap-4 md:gap-6">
-            {LINKS.map((l) => (
-              <button
-                key={l.href}
-                type="button"
-                data-nav-item
-                onClick={() => handleLink(l.href)}
-                className="text-left text-4xl font-semibold leading-tight text-white/90 hover:text-white md:text-6xl"
-              >
-                {l.label}
-              </button>
-            ))}
-          </div>
+  {LINKS.map((l) => (
+    <SlidingTextLink
+      key={l.href}
+      text={l.label}
+      href={l.href}
+      primaryColor="#8EB8AF"   
+      underline={true}
+      className="text-left text-4xl font-semibold leading-tight text-white md:text-6xl"
+    />
+  ))}
+</div>
 
-          {/* Meta col (editabile) */}
+          {/* Meta col */}
           <div className="grid gap-6 md:grid-cols-2">
             <div className="text-white">
               <p className="text-sm/6 text-white/50">Contact</p>
