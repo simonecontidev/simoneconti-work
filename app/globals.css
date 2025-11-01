@@ -19,6 +19,7 @@
   }
 }
 
+
 body {
   background: var(--background);
   color: var(--foreground);
@@ -27,10 +28,39 @@ body {
 
 /* Copy (line reveal) */
 .line{
-  display:block;           /* <- aggiungi */
+  display:block;           
   position:relative;
   transform:translateY(100%);
   will-change:transform;
   padding-bottom:0.2em;
   margin-bottom:-0.2em;
 }
+
+/* hero section */
+
+.hero .hero-content {
+  position: absolute;
+  top: 50svh;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: var(--base-100);
+  text-align: center;
+  width: 75%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 2rem;
+  padding: 1rem;
+}
+
+.hero .hero-tagline {
+  width: 40%;
+  color: var(--base-200);
+}
+
+span.spacer {
+  display: inline-block;
+  width: 20rem;
+}
+
