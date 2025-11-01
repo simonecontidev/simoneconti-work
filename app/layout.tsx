@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import Header from "@/components/Header";
+import SmoothScroll from "@/components/SmoothScroll";
+import GsapSetup from "@/components/GsapSetup";
 
 export const metadata: Metadata = {
   title: "Simone Conti — Frontend Developer",
@@ -11,8 +13,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en">
       <body className="antialiased">
-        <Header />
-        {children}
+        <GsapSetup />
+        <SmoothScroll>
+          <Header />
+          {children}
+        </SmoothScroll>
       </body>
     </html>
   );
