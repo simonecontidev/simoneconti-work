@@ -5,6 +5,7 @@ import Copy from "@/components/Copy/Copy";
 import Spotlight from "@/components/Spotlight";
 import Footer from "@/components/Footer/Footer";
 import { useGsapRegister } from "@/lib/gsap";
+import CTACard from "@/components/CTACard";
 
 export default function AboutPage() {
   const { ScrollTrigger } = useGsapRegister();
@@ -63,6 +64,7 @@ I build high-performance websites and interfaces using Next.js, React, GSAP, Tai
 
       {/* Spotlight rows */}
       <Spotlight />
+      <CTACard />
     </div>
   );
 }
