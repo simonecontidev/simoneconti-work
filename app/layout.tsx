@@ -28,8 +28,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <SmoothScroll>
            <TopBar />
                   <SiteChrome>{children}
-                    <Nav />
+                    
                   </SiteChrome>
+                  <Nav />
         </SmoothScroll>
           <Footer />
       </body>

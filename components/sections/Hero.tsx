@@ -1,26 +1,52 @@
 "use client";
-import { useEffect, useRef } from "react";
-import { useGsapRegister } from "@/lib/gsap";
-import Container from "@/components/ui/Container";
-import { H1 } from "@/components/ui/Heading";
+
+import Image from "next/image";
+import Copy from "@/components/Copy/Copy";
+import AnimatedButton from "@/components/ui/AnimatedButton";
+import useViewTransition from "@/hooks/useViewTransition";
 
 export default function Hero() {
-  const { gsap } = useGsapRegister();
-  const ref = useRef<HTMLDivElement | null>(null);
-
-  useEffect(() => {
-    if (!ref.current) return;
-    gsap.fromTo(ref.current, { y: 20, opacity: 0 }, { y: 0, opacity: 1, duration: 0.8, ease: "power2.out" });
-  }, [gsap]);
+  const { navigateWithTransition } = useViewTransition();
 
   return (
-    <div className="pt-20">
-      <Container>
-        <div ref={ref}>
-          <H1>Frontend Developer — Next.js, Tailwind, GSAP</H1>
-          <p className="mt-4 text-zinc-500">Barcelona · Available for hire</p>
+    <section className="relative isolate min-h-screen flex flex-col justify-center overflow-hidden">
+      {/* Background image + gradient overlay */}
+      <div className="absolute inset-0 -z-10">
+        <Image
+          src="/home/hero.jpg"
+          alt="Tropical leaves background"
+          fill
+          priority
+          className="object-cover object-center"
+        />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/60 to-black/80" />
+      </div>
+
+      {/* Container */}
+      <div className="relative z-10 mx-auto max-w-5xl px-6 text-center">
+        <Copy animateOnScroll={false} delay={0.6}>
+          <h1 className="text-balance text-4xl font-semibold leading-[1.15] text-white md:text-6xl lg:text-7xl">
+            Frontend Developer
+          </h1>
+        </Copy>
+
+        <Copy animateOnScroll={false} delay={0.85}>
+          <p className="mx-auto mt-24 mb-24 max-w-2xl text-pretty text-base text-white/80 md:text-lg">
+            At Terrene, we shape environments that elevate daily life,
+            invite pause, and speak through texture and light.
+          </p>
+        </Copy>
+
+        <div className="mt-10 flex justify-center">
+          <AnimatedButton
+            label="Discover More"
+            route="/portfolio"
+            onClick={() => navigateWithTransition("/about")}
+          />
         </div>
-      </Container>
-    </div>
+      </div>
+
+    
+    </section>
   );
 }

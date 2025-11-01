@@ -8,8 +8,6 @@ import FadeTest from "@/components/sections/FadeTest";
 export default function HomePage() {
   return (
     <main>
-
-     
       <Hero />
       <Marquee />
       <div className="mx-auto max-w-4xl px-6">
