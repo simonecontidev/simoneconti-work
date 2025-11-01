@@ -10,8 +10,6 @@ export default function HomePage() {
       <Marquee />
       <div className="mx-auto max-w-4xl px-6">
         <FadeTest />
-         <h1 className="text-4xl font-bold">Bricolage Grotesque</h1>
-  <p className="font-mono mt-6">Martian Mono Variable</p>
       </div>
       <WorkGrid />
     </main>

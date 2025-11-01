@@ -3,6 +3,7 @@ import "./globals.css";
 import Header from "@/components/Header";
 import SmoothScroll from "@/components/SmoothScroll";
 import GsapSetup from "@/components/GsapSetup";
+import Footer from "@/components/Footer/Footer";
 
 import "@fontsource-variable/martian-mono";
 import "@fontsource-variable/bricolage-grotesque";
@@ -21,6 +22,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <Header />
           {children}
         </SmoothScroll>
+          <Footer />
       </body>
     </html>
   );
