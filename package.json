@@ -9,6 +9,8 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@fontsource-variable/bricolage-grotesque": "^5.2.10",
+    "@fontsource-variable/martian-mono": "^5.2.7",
     "@studio-freight/lenis": "^1.0.42",
     "gsap": "^3.13.0",
     "next": "16.0.1",

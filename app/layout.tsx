@@ -4,6 +4,9 @@ import Header from "@/components/Header";
 import SmoothScroll from "@/components/SmoothScroll";
 import GsapSetup from "@/components/GsapSetup";
 
+import "@fontsource-variable/martian-mono";
+import "@fontsource-variable/bricolage-grotesque";
+
 export const metadata: Metadata = {
   title: "Simone Conti — Frontend Developer",
   description: "Portfolio built with Next.js, Tailwind, GSAP, and Lenis.",
