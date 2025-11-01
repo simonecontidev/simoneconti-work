@@ -64,3 +64,9 @@ span.spacer {
   width: 20rem;
 }
 
+/* Ogni linea sta dentro un contenitore che maschera l'overflow */
+.line {
+  clip-path: polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%);
+  overflow: hidden;
+  will-change: transform;
+}
