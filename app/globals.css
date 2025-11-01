@@ -24,3 +24,12 @@ body {
   color: var(--foreground);
   font-family: "Bricolage Grotesque Variable", system-ui, sans-serif;
 }
+
+/* Copy (line reveal) */
+.line{
+  position: relative;
+  transform: translateY(100%);
+  will-change: transform;
+  padding-bottom: 0.2em;
+  margin-bottom: -0.2em;
+}
