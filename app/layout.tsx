@@ -5,6 +5,12 @@ import SmoothScroll from "@/components/SmoothScroll";
 import GsapSetup from "@/components/GsapSetup";
 import Footer from "@/components/Footer/Footer";
 
+import SiteChrome from "@/components/SiteChrome";
+import Nav from "@/components/Nav";
+
+
+
+
 import "@fontsource-variable/martian-mono";
 import "@fontsource-variable/bricolage-grotesque";
 
@@ -20,6 +26,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <GsapSetup />
         <SmoothScroll>
           <Header />
+                  <SiteChrome>{children}
+                    <Nav />
+                  </SiteChrome>
+
           {children}
         </SmoothScroll>
           <Footer />
