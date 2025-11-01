@@ -2,6 +2,8 @@ import Hero from "@/components/sections/Hero";
 import Marquee from "@/components/sections/Marquee";
 import WorkGrid from "@/components/sections/WorkGrid";
 import FadeTest from "@/components/sections/FadeTest";
+import PhotosSection from "@/components/sections/PhotosSection";
+
 
 
 
@@ -14,6 +16,8 @@ export default function HomePage() {
         <FadeTest />
       </div>
       <WorkGrid />
+            <PhotosSection />
+
     </main>
   );
 }
