@@ -30,8 +30,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                   <SiteChrome>{children}
                     <Nav />
                   </SiteChrome>
-
-          {children}
         </SmoothScroll>
           <Footer />
       </body>
