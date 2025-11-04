@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import Copy from "@/components/Copy/Copy";
-import useViewTransition from "@/hooks/useViewTransition";
+import Copy from "../../../components/Copy/Copy";
+import useViewTransition from "../../../hooks/useViewTransition";
 
 export default function ContactPage() {
   const containerRef = useRef<HTMLDivElement | null>(null);

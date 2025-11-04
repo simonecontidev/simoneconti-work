@@ -4,7 +4,6 @@ import { useEffect, useRef } from "react";
 import Image from "next/image";
 import { useGsapRegister } from "@/lib/gsap";
 
-// ✅ mini componente locale: split linee + reveal
 function CopyReveal({
   children,
   className = "",
@@ -24,7 +23,7 @@ function CopyReveal({
 
     // import dinamico per evitare problemi SSR
     (async () => {
-      const SplitType = (await import("@/lib/SplitType")).default ?? (await import("@/lib/SplitType/index")).default;
+      const SplitType = (await import("@/lib/SplitType")).default ?? (await import("../../../lib/SplitType/index")).default;
 
       // 1) split per linee
       const split = new SplitType(ref.current, { types: "lines", tagName: "span" });

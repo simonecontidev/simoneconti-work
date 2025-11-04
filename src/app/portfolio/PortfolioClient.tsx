@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
-import NextImage from "next/image";               // 👈 rinominato
+import NextImage from "next/image";               
 import { PROJECTS } from "./_data";
 import { useGsapRegister } from "@/lib/gsap";
 
