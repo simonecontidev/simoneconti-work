@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 import LenisProvider from "../../components/providers/LenisProvider.tsx";
 
+import "../../components/HorizontalScroll/HorizontalScroll.css";
+
 export const metadata: Metadata = {
   title: "Simone Conti — Next.js Playground",
   description: "Clean baseline · Tailwind · GSAP · Lenis · Framer Motion",

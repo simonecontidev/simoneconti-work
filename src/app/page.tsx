@@ -1,14 +1,22 @@
+"use client";
+import dynamic from "next/dynamic";
+const WonJYou = dynamic(() => import("../../components/HorizontalScroll/HorizontalScroll"), { ssr: false });
+
+const images = [
+  "/img-1.jpg","/img-2.jpg","/img-3.jpg","/img-4.jpg","/img-5.jpg","/img-6.jpg",
+  "/img-7.jpg","/img-8.jpg","/img-9.jpg","/img-10.jpg","/img-11.jpg","/img-12.jpg","/img-13.jpg",
+];
+
+const slides: WonJYouProps["slides"] = [
+  { image: "/img-1.jpg", text: "A landscape in constant transition..." },
+  { image: "/img-2.jpg", text: "The rhythm of motion carries us forward..." },
+];
+
 export default function Home() {
   return (
     <main className="min-h-dvh grid place-items-center bg-black text-zinc-100">
-      <section className="px-6 text-center">
-        <h1 className="text-4xl md:text-6xl font-semibold tracking-tight">
-          Simone Conti — Next.js Playground
-        </h1>
-        <p className="mt-4 text-base md:text-lg text-zinc-300">
-          Clean baseline · Tailwind · GSAP · Lenis · Framer Motion
-        </p>
-      </section>
+      
+      <WonJYou images={images} slides={slides} featuredIndex={6} />;
     </main>
   );
 }
