@@ -4,6 +4,14 @@ import WonJYou from "../../components/sections/HorizontalShowcase/HorizontalShow
 import ScrollShowcase from "../../components/sections/ScrollShowcase/ScrollShowcase";
 import CamilleMormalSlider from "../../components/CamilleMormalSlider/CamilleMormalSlider";
 
+import ScrollImageReveal from "../../components/ScrollImageReveal/ScrollImageReveal";
+
+const IMAGES = [
+  { src: "/img-1.jpg", alt: "Work 01", caption: "Neo-Tropic Series 01", bgColor: "#faba4a" },
+  { src: "/img-2.jpg", alt: "Work 02", caption: "Neo-Tropic Series 02", bgColor: "#bb2a26" },
+  { src: "/img-3.jpg", alt: "Work 03", caption: "Neo-Tropic Series 03", bgColor: "#7e7d65" },
+  { src: "/img-4.jpg", alt: "Work 04", caption: "Neo-Tropic Series 04", bgColor: "#989682" },
+];
 
 
 export default function Home() {
@@ -60,6 +68,18 @@ Through minimal form and precise detail, I aim to build work that lasts and offe
         enableSmooth: true,
       }}
     />
+
+    <ScrollImageReveal
+  items={IMAGES}
+  revealFrom="top"
+  once
+  fadeUp
+  enableParallax
+  parallaxMode="alternate"   // 👈 alterna su/giù
+  parallaxAmount={120}       // intensità più marcata
+  parallaxEase="power2.out"  // movimento morbido
+  parallaxMobileScale={0.6}  // meno invasivo su mobile
+/>
 
     </main>
   );

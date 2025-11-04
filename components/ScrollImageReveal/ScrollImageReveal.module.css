@@ -1,0 +1,61 @@
+.irs_root {
+  position: relative;
+  padding: clamp(40px, 8vw, 100px) 16px;
+}
+
+.irs_bg {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background: #111; /* colore iniziale */
+  transition: background-color 0.4s ease;
+}
+
+.irs_grid {
+  display: grid;
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 720px) {
+  .irs_grid {
+    grid-template-columns: 1fr;
+    row-gap: clamp(40px, 10vw, 120px);
+  }
+}
+
+.irs_item {
+  display: grid;
+  grid-template-columns: 1fr;
+  align-items: end;
+}
+
+.irs_media {
+  background: #0b0b0b; /* fallback */
+  overflow: hidden;
+}
+
+.irs_img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+}
+
+.irs_caption {
+  margin-top: 10px;
+  font-size: clamp(14px, 1.6vw, 16px);
+  color: #d1d1d1;
+  line-height: 1.4;
+}
+
+/* opzionale contatore */
+.irs_counter {
+  position: fixed;
+  top: 12px;
+  left: 12px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  color: #fff;
+  font-size: 14px;
+  opacity: 0.8;
+  z-index: 50;
+}
