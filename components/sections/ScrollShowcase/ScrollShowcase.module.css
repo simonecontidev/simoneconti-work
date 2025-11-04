@@ -1,0 +1,52 @@
+/* components/ScrollShowcase/ScrollShowcase.module.css */
+@import url("https://fonts.googleapis.com/css2?family=Manrope:wght@200..800&display=swap");
+
+.ssRoot {  background:#1a1a1a; color:#fff; }
+.ssRoot img { width:100%; height:100%; object-fit:cover; }
+
+/* Tipografia */
+.ssRoot h1{
+  font-size:4rem; font-weight:900; letter-spacing:-0.15rem;
+  line-height:1.125; text-align:center;
+}
+
+/* Sezioni base */
+.ssHero, .ssOutro, .ssAbout {
+  position:relative; width:100%; height:100svh; padding:2rem;
+  display:flex; justify-content:center; align-items:center; overflow:hidden;
+}
+.ssHeroMedia, .ssOutroMedia {
+  position:relative; width:300px; aspect-ratio:5/7; overflow:hidden;
+}
+
+/* Services (pin) */
+.ssServices{
+  position:relative; width:100%; height:100svh;
+  display:flex; flex-direction:column; justify-content:center; align-items:center; overflow:hidden;
+}
+.ssServicesHeader{
+  position:relative; width:100%; height:30svh; padding:0 2rem; background:#1a1a1a; will-change:transform;
+}
+.ssServicesHeader :global(img){ object-fit:contain; }
+.ssServicesHeader:nth-child(1), .ssServicesHeader:nth-child(3){ transform:translateX(100%) translateY(0%); }
+.ssServicesHeader:nth-child(2){ transform:translateX(-100%) translateY(0%); z-index:2; }
+
+/* Copy sotto il pin */
+.ssServicesCopy{
+  position:relative; width:100%; height:100%;
+  margin-top:155svh; padding:2rem 2rem 25svh; text-align:center;
+}
+
+/* Text reveal */
+.ssAnimateText{
+  position:relative; width:60%; margin:0 auto; color:#4f4f4f; --clip-value:100%;
+}
+.ssAnimateText::before{
+  content:attr(data-text); position:absolute; top:0; left:0; color:#fff;
+  clip-path: inset(0 0 var(--clip-value) 0); will-change:clip-path;
+}
+
+@media (max-width:1000px){
+  .ssRoot h1{ font-size:2rem; letter-spacing:-0.05rem; }
+  .ssAnimateText{ width:100%; }
+}
