@@ -2,13 +2,31 @@
 import WonJYou from "../../components/sections/HorizontalShowcase/HorizontalShowcase";
 
 import ScrollShowcase from "../../components/sections/ScrollShowcase/ScrollShowcase";
+import CamilleMormalSlider from "../../components/CamilleMormalSlider/CamilleMormalSlider";
 
 
 
 export default function Home() {
   return (
     <main className="min-h-dvh grid place-items-center bg-black text-zinc-100">
-      <h1>ciao</h1>
+
+    <CamilleMormalSlider
+    mode="bleed"
+        images={[
+          "/assets/img1.jpg",
+          "/assets/img2.jpg",
+          "/assets/img3.jpg",
+          "/assets/img4.jpg",
+          "/assets/img5.jpg",
+        ]}
+        titles={[
+          "The Revival Ensemble",
+          "Above The Canvas",
+          "Harmony in Every Note",
+          "Redefining Imagination",
+          "From Earth to Expression",
+        ]}
+      />
       <WonJYou
         images={[
           "/img-1.jpg","/img-2.jpg","/img-3.jpg","/img-4.jpg",
@@ -42,6 +60,7 @@ Through minimal form and precise detail, I aim to build work that lasts and offe
         enableSmooth: true,
       }}
     />
+
     </main>
   );
 }
