@@ -6,7 +6,9 @@
     "dev": "next dev --webpack",
     "build": "next build --webpack",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "format": "prettier --write .",
+    "lint:fix": "next lint --fix"
   },
   "dependencies": {
     "clsx": "^2.1.1",
