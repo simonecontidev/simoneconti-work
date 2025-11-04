@@ -3,9 +3,7 @@
 html.lenis {
   height: auto;
 }
-.lenis.lenis-smooth {
-  scroll-behavior: auto !important;
-}
+
 .lenis.lenis-smooth [data-lenis-prevent] {
   overscroll-behavior: contain;
 }
@@ -15,3 +13,10 @@ html.lenis {
 .lenis.lenis-scrolling iframe {
   pointer-events: none;
 }
+
+/* evita smooth CSS che litiga con Lenis */
+html { scroll-behavior: auto !important; }
+
+/* micro-ottimizzazioni GPU */
+.hs-track { will-change: transform; transform: translate3d(0,0,0); }
+.hs-card  { backface-visibility: hidden; transform: translateZ(0); }

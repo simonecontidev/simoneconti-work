@@ -1,52 +1,38 @@
+// src/components/providers/LenisProvider.tsx
 "use client";
 
 import { useEffect, type ReactNode } from "react";
 import Lenis from "lenis";
 import { gsap } from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
 
-type Props = { children: ReactNode };
+gsap.registerPlugin(ScrollTrigger);
 
-export default function LenisProvider({ children }: Props) {
+export default function LenisProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
-    // Rispetta utenti che preferiscono ridurre il movimento
-    const mql = window.matchMedia("(prefers-reduced-motion: reduce)");
-    const reduceMotion = mql.matches;
+    const prefersReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (prefersReduced) return;
 
-    // Evita doppie istanze in fast refresh
-    let lenis: Lenis | null = null;
+    const lenis = new Lenis({
+      duration: 1.1,
+      smoothWheel: true,
+      smoothTouch: false,
+    });
 
-    if (!reduceMotion) {
-      lenis = new Lenis({
-        // tuning base, poi lo affiniamo quando iniziamo con le animazioni reali
-        duration: 1.1, // sensazione “calma”
-        wheelMultiplier: 1,
-        touchMultiplier: 1.2,
-        smoothWheel: true,
-        smoothTouch: false,
-      });
+    const raf = (time: number) => {
+      // gsap.ticker -> seconds ; lenis.raf -> ms
+      lenis.raf(time * 1000);
+    };
 
-      // Usa GSAP come RAF driver per sincronizzare tutto lo stack
-      const ticker = (time: number) => {
-        // gsap.ticker fornisce "time" in secondi; Lenis si aspetta ms
-        lenis?.raf(time * 1000);
-      };
+    gsap.ticker.add(raf);
+    gsap.ticker.lagSmoothing(0);
+    ScrollTrigger.defaults({ pinType: "transform" });
 
-      gsap.ticker.add(ticker);
-      // Optional per coerenza temporale durante scroll lunghi
-      gsap.ticker.lagSmoothing(0);
-
-      // Cleanup
-      return () => {
-        gsap.ticker.remove(ticker);
-        // Disattiva istanza
-        // @ts-expect-error lenis ha destroy() a runtime anche se non sempre tipizzato
-        lenis?.destroy?.();
-        lenis = null;
-      };
-    }
-
-    // se reduced motion: niente Lenis
-    return () => {};
+    return () => {
+      gsap.ticker.remove(raf);
+      // @ts-ignore optional chaining at runtime
+      lenis?.destroy?.();
+    };
   }, []);
 
   return <>{children}</>;
