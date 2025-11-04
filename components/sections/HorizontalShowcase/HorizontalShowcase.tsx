@@ -1,163 +1,271 @@
 "use client";
 
-import Image from "next/image";
-import { useEffect, useMemo } from "react";
-import { gsap } from "gsap";
+import { useEffect, useRef, useMemo } from "react";
+import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { useGsapContext } from "@/lib/useGsap";
-import clsx from "clsx";
+import { Flip } from "gsap/Flip";
+import Lenis from "lenis";
 
-gsap.registerPlugin(ScrollTrigger);
+import "../HorizontalShowcase/horizontalshowcase.css";
 
-export type ShowcaseSlide = {
-  id: string;
-  title: string;
-  subtitle?: string;
-  image: { src: string; alt: string; width?: number; height?: number };
-};
+gsap.registerPlugin(ScrollTrigger, Flip);
 
 export type HorizontalShowcaseProps = {
-  slides: ShowcaseSlide[];
-  className?: string;
-  /** altezza “pista” in viewport height */
-  trackVh?: number; // default 120
-  /** spazio tra card */
-  gapRem?: number;  // default 2
+  images?: string[];              
+  slides?: { image: string; text: string }[];
+  featuredIndex?: number;         
 };
 
-export default function HorizontalShowcase({
-  slides,
-  className,
-  trackVh = 120,
-  gapRem = 2,
-}: HorizontalShowcaseProps) {
-  const { ref, withContext } = useGsapContext<HTMLDivElement>();
-  const count = useMemo(() => slides.length, [slides]);
+const DEFAULT_IMAGES = [
+  "/img-1.jpg","/img-2.jpg","/img-3.jpg","/img-4.jpg","/img-5.jpg","/img-6.jpg",
+  "/img-7.jpg","/img-8.jpg","/img-9.jpg","/img-10.jpg","/img-11.jpg","/img-12.jpg","/img-13.jpg",
+];
+
+const DEFAULT_SLIDES = [
+  {
+    image: "/slide-1.jpg",
+    text:
+      "A landscape in constant transition, where every shape, sound, and shadow refuses to stay still. What seems stable begins to dissolve, and what fades returns again in a new form.",
+  },
+  {
+    image: "/slide-2.jpg",
+    text:
+      "The rhythm of motion carries us forward into spaces that feel familiar yet remain undefined. Each shift is subtle, yet together they remind us that nothing we see is ever permanent.",
+  },
+];
+
+export default function WonJYou(props: HorizontalShowcaseProps) {
+  const IMAGES = props.images?.length ? props.images : DEFAULT_IMAGES;
+  const SLIDES = props.slides?.length ? props.slides : DEFAULT_SLIDES;
+  const pinIndex = Number.isInteger(props.featuredIndex) ? (props.featuredIndex as number) : 6;
+
+  // Refs
+  const containerRef = useRef<HTMLDivElement>(null);
+  const marqueeRef = useRef<HTMLElement>(null);
+  const marqueeImagesRef = useRef<HTMLDivElement>(null);
+  const horizontalRef = useRef<HTMLElement>(null);
+  const horizontalWrapperRef = useRef<HTMLDivElement>(null);
+
+  // Memorizza selettori per evitare closure stale
+  const selectors = useMemo(() => ({
+    pinnedImg: ".marquee-img.pin img",
+  }), []);
 
   useEffect(() => {
-    return withContext(() => {
-      const root = ref.current!;
-      const track = root.querySelector<HTMLElement>(".hs-track")!;
-      const cards = gsap.utils.toArray<HTMLElement>(".hs-card");
+    const container = containerRef.current!;
+    const marquee = marqueeRef.current!;
+    const marqueeImages = marqueeImagesRef.current!;
+    const horizontal = horizontalRef.current!;
+    const horizontalWrapper = horizontalWrapperRef.current!;
 
-      // larghezza totale scroller (in base alle card)
-      const totalWidth = cards.reduce((acc, el) => acc + el.offsetWidth, 0) + (cards.length - 1) * gapRem * 16;
+    // Lenis (una sola istanza)
+    const lenis = new Lenis();
+    const onLenisScroll = () => ScrollTrigger.update();
+    lenis.on("scroll", onLenisScroll);
+    gsap.ticker.add((time) => lenis.raf(time * 1000));
+    gsap.ticker.lagSmoothing(0);
 
-      // timeline orizzontale
-      const tl = gsap.timeline({
-        defaults: { ease: "none" },
-        scrollTrigger: {
-          trigger: root,
-          start: "top top",
-          end: () => `+=${totalWidth}`, // durata proporzionale alla larghezza
-          pin: true,
-          scrub: 1,
-          invalidateOnRefresh: true,
-          anticipatePin: 1,
-          onRefresh: () => {
-            // for Lenis: assicurati che il layout sia pronto prima di calcolare
-          },
+    const lightColor = getComputedStyle(document.documentElement).getPropertyValue("--light").trim();
+    const darkColor  = getComputedStyle(document.documentElement).getPropertyValue("--dark").trim();
+    const interpolateColor = (c1: string, c2: string, f: number) => gsap.utils.interpolate(c1, c2, f);
+
+    // Marquee x
+    gsap.to(marqueeImages, {
+      scrollTrigger: {
+        trigger: marquee,
+        start: "top bottom",
+        end: "top top",
+        scrub: true,
+        onUpdate: (self) => {
+          const xPosition = -75 + self.progress * 25;
+          gsap.set(marqueeImages, { x: `${xPosition}%` });
         },
-      });
-
-      tl.to(track, { x: () => -(totalWidth - root.offsetWidth) });
-
-      // effetti base per le card quando entrano in viewport
-      cards.forEach((card) => {
-        const img = card.querySelector<HTMLElement>(".hs-media");
-        const txt = card.querySelector<HTMLElement>(".hs-text");
-
-        if (img) {
-          gsap.fromTo(
-            img,
-            { scale: 1.05, opacity: 0.001, y: 20 },
-            {
-              scale: 1,
-              opacity: 1,
-              y: 0,
-              scrollTrigger: {
-                trigger: card,
-                start: "left center",
-                end: "right center",
-                scrub: true,
-                horizontal: true,
-                containerAnimation: tl, // collega a timeline orizzontale
-              },
-            },
-          );
-        }
-
-        if (txt) {
-          gsap.fromTo(
-            txt,
-            { y: 20, opacity: 0 },
-            {
-              y: 0,
-              opacity: 1,
-              scrollTrigger: {
-                trigger: card,
-                start: "left center",
-                end: "left center+=20%",
-                scrub: true,
-                horizontal: true,
-                containerAnimation: tl,
-              },
-            },
-          );
-        }
-      });
-
-      // refresh dopo immagini/caricamenti
-      const r1 = () => ScrollTrigger.refresh();
-      window.addEventListener("load", r1);
-      setTimeout(r1, 100); // piccolo guard-rail
-
-      return () => {
-        window.removeEventListener("load", r1);
-      };
+      },
     });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [count, trackVh, gapRem]);
+
+    // Clone + Flip
+    let pinnedMarqueeImgClone: HTMLImageElement | null = null;
+    let isImgCloneActive = false;
+    let flipAnimation: gsap.core.Tween | null = null;
+
+    function createPinnedMarqueeImgClone() {
+      if (isImgCloneActive) return;
+      const original = marquee.querySelector(selectors.pinnedImg) as HTMLImageElement | null;
+      if (!original) return;
+
+      const rect = original.getBoundingClientRect();
+      const centerX = rect.left + rect.width / 2;
+      const centerY = rect.top + rect.height / 2;
+
+      pinnedMarqueeImgClone = original.cloneNode(true) as HTMLImageElement;
+
+      gsap.set(pinnedMarqueeImgClone, {
+        position: "fixed",
+        left: centerX - original.offsetWidth / 2 + "px",
+        top: centerY - original.offsetHeight / 2 + "px",
+        width: original.offsetWidth + "px",
+        height: original.offsetHeight + "px",
+        transform: "rotate(-5deg)",
+        transformOrigin: "center center",
+        pointerEvents: "none",
+        willChange: "transform",
+        zIndex: 100,
+      });
+
+      document.body.appendChild(pinnedMarqueeImgClone);
+      gsap.set(original, { opacity: 0 });
+      isImgCloneActive = true;
+    }
+
+    function removePinnedMarqueeImgClone() {
+      if (!isImgCloneActive) return;
+      const original = marquee.querySelector(selectors.pinnedImg) as HTMLImageElement | null;
+      if (pinnedMarqueeImgClone) {
+        pinnedMarqueeImgClone.remove();
+        pinnedMarqueeImgClone = null;
+      }
+      if (original) gsap.set(original, { opacity: 1 });
+      isImgCloneActive = false;
+    }
+
+    // Pin sezione orizzontale
+    ScrollTrigger.create({
+      trigger: horizontal,
+      start: "top top",
+      end: () => `+=${window.innerHeight * 5}`,
+      pin: true,
+    });
+
+    // Gestione clone
+    ScrollTrigger.create({
+      trigger: marquee,
+      start: "top top",
+      onEnter: createPinnedMarqueeImgClone,
+      onEnterBack: createPinnedMarqueeImgClone,
+      onLeaveBack: removePinnedMarqueeImgClone,
+    });
+
+    // Flip + wrapper horizontal
+    ScrollTrigger.create({
+      trigger: horizontal,
+      start: "top 50%",
+      end: () => `+=${window.innerHeight * 5.5}`,
+      onEnter: () => {
+        if (pinnedMarqueeImgClone && isImgCloneActive && !flipAnimation) {
+          const state = Flip.getState(pinnedMarqueeImgClone);
+          gsap.set(pinnedMarqueeImgClone, {
+            position: "fixed",
+            left: "0px",
+            top: "0px",
+            width: "100%",
+            height: "100svh",
+            transform: "rotate(0deg)",
+            transformOrigin: "center center",
+          });
+          flipAnimation = Flip.from(state, {
+            duration: 1,
+            ease: "none",
+            paused: true,
+          });
+        }
+      },
+      onLeaveBack: () => {
+        if (flipAnimation) {
+          flipAnimation.kill();
+          flipAnimation = null;
+        }
+        gsap.set(container, { backgroundColor: lightColor });
+        gsap.set(horizontalWrapper, { x: "0%" });
+      },
+      onUpdate: (self) => {
+        const progress = self.progress;
+
+        // light -> dark background
+        if (progress <= 0.05) {
+          const bgp = Math.min(progress / 0.05, 1);
+          gsap.set(container, { backgroundColor: interpolateColor(lightColor, darkColor, bgp) });
+        } else {
+          gsap.set(container, { backgroundColor: darkColor });
+        }
+
+        // Flip 0→0.2
+        if (progress <= 0.2) {
+          const sp = progress / 0.2;
+          if (flipAnimation) flipAnimation.progress(sp);
+        }
+
+        // wrapper orizzontale + immagine che scorre
+        if (progress > 0.2 && progress <= 0.95) {
+          if (flipAnimation) flipAnimation.progress(1);
+          const hp = (progress - 0.2) / 0.75;
+          const wrapperX = -66.67 * hp;
+          gsap.set(horizontalWrapper, { x: `${wrapperX}%` });
+
+          if (pinnedMarqueeImgClone) {
+            const slideMovement = (66.67 / 100) * 3 * hp;
+            gsap.set(pinnedMarqueeImgClone, { x: `${-slideMovement * 100}%` });
+          }
+        } else if (progress > 0.95) {
+          if (flipAnimation) flipAnimation.progress(1);
+          if (pinnedMarqueeImgClone) gsap.set(pinnedMarqueeImgClone, { x: "-200%" });
+          gsap.set(horizontalWrapper, { x: "-66.67%" });
+        }
+      },
+    });
+
+    return () => {
+      removePinnedMarqueeImgClone();
+      lenis.off("scroll", onLenisScroll);
+      lenis.destroy();
+      ScrollTrigger.getAll().forEach((st) => st.kill());
+      gsap.globalTimeline.clear();
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [IMAGES.join("|"), SLIDES.map(s => s.image).join("|"), pinIndex]);
 
   return (
-    <section
-      ref={ref}
-      className={clsx(
-        "hs-root relative w-full overflow-hidden bg-neutral-950 text-neutral-50",
-        className,
-      )}
-      style={{ height: `${trackVh}vh` }}
-      aria-label="Horizontal showcase"
-    >
-      {/* TRACK: scorre orizzontale dentro la sezione pinnata */}
-      <div className="hs-track absolute left-0 top-0 h-full will-change-transform flex"
-           style={{ gap: `${gapRem}rem` }}>
-        {slides.map((s) => (
-          <article
-            key={s.id}
-            className="hs-card relative h-[80vh] md:h-[85vh] aspect-[4/3] md:aspect-[16/10] flex-shrink-0 rounded-3xl overflow-hidden bg-neutral-900"
-            aria-label={s.title}
-          >
-            <div className="hs-media relative w-full h-full">
-              <Image
-                src={s.image.src}
-                alt={s.image.alt}
-                fill
-                sizes="(max-width: 768px) 90vw, 70vw"
-                className="object-cover"
-                priority={true}
-              />
-            </div>
+    <div  >
+      <section className="hero">
+        <h1>
+          Fragments of thought arranged in sequence become patterns. They unfold
+          step by step, shaping meaning as they move forward.
+        </h1>
+      </section>
 
-            <header className="hs-text pointer-events-none absolute inset-x-0 bottom-0 p-6 md:p-8 bg-gradient-to-t from-black/50 to-transparent">
-              <h3 className="text-xl md:text-3xl font-semibold tracking-tight">{s.title}</h3>
-              {s.subtitle && (
-                <p className="mt-2 text-sm md:text-base text-neutral-300">{s.subtitle}</p>
-              )}
-            </header>
-          </article>
-        ))}
-      </div>
-    </section>
+      <section ref={marqueeRef} className="marquee">
+        <div className="marquee-wrapper">
+          <div ref={marqueeImagesRef} className="marquee-images">
+            {IMAGES.map((src, i) => (
+              <div key={i} className={`marquee-img ${i === pinIndex ? "pin" : ""}`}>
+                <img src={src} alt={`marquee-${i+1}`} />
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section ref={horizontalRef} className="horizontal-scroll">
+        <div ref={horizontalWrapperRef} className="horizontal-scroll-wrapper">
+          <div className="horizontal-slide horizontal-spacer" />
+          {SLIDES.map((s, i) => (
+            <div key={i} className="horizontal-slide">
+              <div className="col">
+                <h3>{s.text}</h3>
+              </div>
+              <div className="col">
+                <img src={s.image} alt={`slide-${i+1}`} />
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section className="outro">
+        <h1>
+          Shadows fold into light. Shapes shift across the frame, reminding us
+          that stillness is only temporary.
+        </h1>
+      </section>
+    </div>
   );
 }
