@@ -5,6 +5,7 @@ import ScrollShowcase from "../../components/sections/ScrollShowcase/ScrollShowc
 import CamilleMormalSlider from "../../components/CamilleMormalSlider/CamilleMormalSlider";
 
 import ScrollImageReveal from "../../components/ScrollImageReveal/ScrollImageReveal";
+import Nav from "../../components/Nav/Nav";
 
 const IMAGES = [
   { src: "/img-1.jpg", alt: "Work 01", caption: "Neo-Tropic Series 01", bgColor: "#faba4a" },
@@ -81,6 +82,7 @@ Through minimal form and precise detail, I aim to build work that lasts and offe
   parallaxMobileScale={0.6}  // meno invasivo su mobile
 />
 
+<Nav/>
     </main>
   );
 }
