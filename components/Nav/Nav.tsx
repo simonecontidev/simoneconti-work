@@ -128,18 +128,16 @@ export default function Nav() {
       key={l.href}
       text={l.label}
       href={l.href}
-      primaryColor="#8EB8AF"   
+      primaryColor="#4f772d"   
       underline={true}
       className="text-left text-4xl font-semibold leading-tight text-white md:text-6xl"
     />
   ))}
 </div>
-
-          {/* Meta col */}
-          <div className="grid gap-6 md:grid-cols-2">
+          <div className="grid gap-6 md:grid-cols-2 ">
             <div className="text-white">
               <p className="text-sm/6 text-white/50">Contact</p>
-              <p className="text-base">hello@simoneconti.work</p>
+              <p className="text-base">simonecontisid@gmail.com</p>
               <p className="text-base">Barcelona · Remote</p>
             </div>
             <div className="text-white">

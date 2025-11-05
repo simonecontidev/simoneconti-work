@@ -78,9 +78,7 @@ export default function CamilleMormalSlider({
     };
 
     measure();
-    // @ts-ignore
     if (document?.fonts?.ready) {
-      // @ts-ignore
       document.fonts.ready.then(measure).catch(() => {});
     }
     const onResize = () => measure();

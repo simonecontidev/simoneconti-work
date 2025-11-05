@@ -6,7 +6,8 @@ import CamilleMormalSlider from "../../components/CamilleMormalSlider/CamilleMor
 
 import ScrollImageReveal from "../../components/ScrollImageReveal/ScrollImageReveal";
 import HomeTextRevealSection from "../../components/HomeTextRevealSection/HomeTextRevealSection";
-import OVAScrollSliderSection from "../../components/ovaslider/Slider";
+import Nav  from "../../components/Nav/Nav";
+
 
 
 const IMAGES = [
@@ -31,13 +32,17 @@ export default function Home() {
           "/assets/img5.jpg",
         ]}
         titles={[
-          "The Revival Ensemble",
-          "Above The Canvas",
-          "Harmony in Every Note",
-          "Redefining Imagination",
-          "From Earth to Expression",
+          "Pet Finder",
+          "Tropify",
+          "Split the Bill App",
+          "Job App",
+          "Taskflow",
         ]}
       />
+
+
+
+
       <WonJYou
         images={[
           "/img-1.jpg","/img-2.jpg","/img-3.jpg","/img-4.jpg",

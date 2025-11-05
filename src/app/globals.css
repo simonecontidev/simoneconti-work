@@ -20,3 +20,7 @@ html { scroll-behavior: auto !important; }
 /* micro-ottimizzazioni GPU */
 .hs-track { will-change: transform; transform: translate3d(0,0,0); }
 .hs-card  { backface-visibility: hidden; transform: translateZ(0); }
+
+body{
+  color: white;
+}

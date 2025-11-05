@@ -43,7 +43,7 @@ export default function Footer() {
   }, [gsap, ScrollTrigger]);
 
   return (
-    <footer className="w-full px-4 py-6 sm:px-6 lg:px-8">
+    <footer className="w-full px-4 py-6 sm:px-6 lg:px-8 bg-black">
       {/* Meta */}
       <div className="rounded-3xl border border-white/10 p-8 md:p-12">
         {/* Header row */}
