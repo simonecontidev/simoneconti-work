@@ -184,3 +184,16 @@
     -webkit-text-fill-color: transparent;
   }
 }
+
+/* Evita testo invisibile se la gradient manca */
+.h1 {
+  color: var(--fg, #fff); /* fallback */
+}
+
+.shine {
+  -webkit-text-fill-color: currentColor; /* fallback visibile */
+  background-image: var(--shine-gradient, none);
+  -webkit-background-clip: text;
+  background-clip: text;
+}
+
