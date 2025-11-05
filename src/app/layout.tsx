@@ -4,9 +4,11 @@ import type { Metadata } from "next";
 import { Martian_Mono, Fraunces } from "next/font/google";
 import Script from "next/script";
 
-import Nav from "../../components/Nav/Nav";
 import Footer from "../../components/Footer/Footer";
 import TopBar from "../../components/TopBar/TopBar";
+
+import Nav from "../../components/Nav/Nav";
+
 
 const martian = Martian_Mono({
   subsets: ["latin"],
@@ -53,7 +55,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 
         <TopBar className="vt-static" />
         {children}
-        <Nav className="vt-static" />
         <Footer className="vt-static" />
 
         {/* ✅ Overlay ora è DENTRO <body>, niente più hydration error */}
@@ -62,6 +63,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           className="pointer-events-none fixed inset-0 opacity-0 transition-opacity duration-200"
           aria-hidden="true"
         />
+
+        <Nav/>
+
       </body>
     </html>
   );

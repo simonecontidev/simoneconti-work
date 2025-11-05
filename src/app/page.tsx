@@ -5,7 +5,6 @@ import ScrollShowcase from "../../components/sections/ScrollShowcase/ScrollShowc
 import SliderHero from "../../components/SliderHero/SliderHero";
 import ScrollImageReveal from "../../components/ScrollImageReveal/ScrollImageReveal";
 import HomeTextRevealSection from "../../components/HomeTextRevealSection/HomeTextRevealSection";
-import Nav from "../../components/Nav/Nav";
 
 export default function Home() {
   // 👉 qui definisci i progetti
@@ -84,7 +83,7 @@ export default function Home() {
   parallaxDriftX={24}
 />
 
-      <Nav />
+
       <HomeTextRevealSection />
     </main>
   );
