@@ -1,0 +1,112 @@
+/* Token locali, agganciati ai global token (global.css) */
+.root {
+  --cmp-surface: var(--surface);
+  --cmp-text: var(--text);
+  --cmp-muted: var(--muted);
+  --cmp-card: var(--card);
+  --cmp-surface-strong: var(--surface-strong);
+
+  position: relative;
+  padding: clamp(40px, 8vw, 100px) clamp(16px, 5vw, 64px); /* full-width con padding laterale */
+  background: var(--cmp-surface);
+  color: var(--cmp-text);
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* overlay dinamico che cambia con lo scroll */
+.bg {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background: var(--cmp-surface-strong);
+  transition: background-color 0.4s ease;
+}
+
+/* Header */
+.header {
+  display: grid;
+  place-items: center;
+  margin-bottom: clamp(20px, 6vw, 60px);
+}
+.h1 {
+  font-size: clamp(32px, 6vw, 56px);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+/* Griglia stile ScrollImageReveal: 1 col → 2 col ≥900px */
+.grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: clamp(20px, 3vw, 32px);
+  width: 100%;
+}
+
+@media (min-width: 900px) {
+  .grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: start;
+  }
+}
+
+/* Card */
+.card {
+  position: relative;
+  display: block;
+  border-radius: 16px;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+/* wrapper per fadeUp e clip */
+.media {
+  position: relative;
+  width: 100%;
+  height: clamp(260px, 42vw, 460px);
+  background: var(--cmp-card);
+  overflow: hidden;
+  will-change: transform, opacity;
+}
+
+/* immagine con clip reveal e hover scale */
+.img {
+  object-fit: cover;
+  transform: translateZ(0);
+  will-change: transform, clip-path;
+}
+
+/* Meta: titolo dentro card + role */
+.meta {
+  position: absolute;
+  left: 16px;
+  bottom: 14px;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.titleMask {
+  clip-path: polygon(0% 0%,100% 0%,100% 100%,0% 100%);
+  overflow: hidden;
+}
+
+.title {
+  transform: translateY(24px); /* parte nascosto come nel tuo originale */
+  font-size: clamp(16px, 2.2vw, 22px);
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  line-height: 1.1;
+  color: var(--cmp-text);
+  will-change: transform;
+}
+
+.role {
+  margin-top: 4px;
+  font-size: 12px;
+  color: color-mix(in oklab, var(--cmp-text) 65%, transparent);
+}
+
+/* piccolo respiro verticale “masonry” */
+@media (min-width: 900px) {
+  .card:nth-child(odd) { margin-top: 4vh; }
+  .card:nth-child(even) { margin-top: 0; }
+}
