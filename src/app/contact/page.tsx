@@ -14,34 +14,28 @@ export default function ContactPage() {
     const container = containerRef.current;
     if (!container) return;
 
-    // ---- config base ----
     const SPEED = 3;
     const COUNT = 10;
     const CHANGE_DELAY_MS = 20;
     const EDGE_OFFSET = -40;
 
-    // media queries
     const mqDesktop = window.matchMedia("(min-width: 1024px)");
     const mqPointerFine = window.matchMedia("(pointer: fine)");
     const mqReduced = window.matchMedia("(prefers-reduced-motion: reduce)");
 
-    const canRun = () =>
-      mqDesktop.matches && mqPointerFine.matches && !mqReduced.matches;
+    const canRun = () => mqDesktop.matches && mqPointerFine.matches && !mqReduced.matches;
 
     let desktop = canRun();
     let canTurn = true;
     let imgIndex = 1;
 
-    // dimensioni dinamiche basate sul container/viewport
     const computeSize = () => {
       const r = container.getBoundingClientRect();
-      // 28% del lato min, max 360px, min 160px
       return Math.max(160, Math.min(360, Math.round(Math.min(r.width, r.height) * 0.28)));
     };
 
     let SIZE = computeSize();
 
-    // preload
     const imgs: HTMLImageElement[] = [];
     const preload = async () => {
       await Promise.all(
@@ -79,6 +73,7 @@ export default function ContactPage() {
         zIndex: "0",
         willChange: "transform",
       } as CSSStyleDeclaration);
+      saver.setAttribute("aria-hidden", "true"); // decorativo
       container.appendChild(saver);
 
       const rect = container.getBoundingClientRect();
@@ -131,7 +126,6 @@ export default function ContactPage() {
       const prev = desktop;
       desktop = canRun();
       SIZE = computeSize();
-      // aggiorna size live
       if (saverRef.current) {
         saverRef.current.style.width = `${SIZE}px`;
         saverRef.current.style.height = `${SIZE}px`;
@@ -144,6 +138,10 @@ export default function ContactPage() {
     mqDesktop.addEventListener?.("change", handleResizeOrMQ);
     mqPointerFine.addEventListener?.("change", handleResizeOrMQ);
     mqReduced.addEventListener?.("change", handleResizeOrMQ);
+    // Safari fallback
+    mqDesktop.addListener?.(handleResizeOrMQ);
+    mqPointerFine.addListener?.(handleResizeOrMQ);
+    mqReduced.addListener?.(handleResizeOrMQ);
 
     if (desktop) start();
 
@@ -153,6 +151,9 @@ export default function ContactPage() {
       mqDesktop.removeEventListener?.("change", handleResizeOrMQ);
       mqPointerFine.removeEventListener?.("change", handleResizeOrMQ);
       mqReduced.removeEventListener?.("change", handleResizeOrMQ);
+      mqDesktop.removeListener?.(handleResizeOrMQ);
+      mqPointerFine.removeListener?.(handleResizeOrMQ);
+      mqReduced.removeListener?.(handleResizeOrMQ);
     };
   }, []);
 
@@ -161,24 +162,19 @@ export default function ContactPage() {
       ref={containerRef}
       className="
         relative mx-auto flex min-h-svh w-full items-center justify-center overflow-hidden
-        bg-zinc-50 text-zinc-900 dark:bg-black dark:text-white
+        bg-[var(--bg)] text-[var(--fg)]
         px-4 sm:px-6 md:px-8
+        transition-colors
       "
     >
       {/* Copy */}
-      <div
-        className="
-          relative z-10 mx-auto grid w-full max-w-6xl gap-10 md:gap-12
-          md:grid-cols-2
-        "
-      >
+      <div className="relative z-10 mx-auto grid w-full max-w-6xl gap-10 md:gap-12 md:grid-cols-2">
         {/* Left column */}
         <div className="flex items-start md:items-center">
           <Copy delay={0.6}>
             <h2
               className="
-                text-3xl sm:text-4xl md:text-6xl font-semibold leading-tight
-                tracking-tight
+                text-3xl sm:text-4xl md:text-6xl font-semibold leading-tight tracking-tight
               "
             >
               Bring beauty one pixel at time
@@ -190,7 +186,7 @@ export default function ContactPage() {
         <div className="flex flex-col gap-8 sm:gap-10">
           <div>
             <Copy delay={0.8}>
-              <p className="mb-2 text-xs sm:text-sm uppercase tracking-wide text-zinc-600 dark:text-white/60">
+              <p className="mb-2 text-xs sm:text-sm uppercase tracking-wide text-zinc-600 dark:text-zinc-400/80">
                 Focus
               </p>
               <p className="text-base sm:text-lg">Frontend Engineering</p>
@@ -201,7 +197,7 @@ export default function ContactPage() {
 
           <div>
             <Copy delay={1.0}>
-              <p className="mb-2 text-xs sm:text-sm uppercase tracking-wide text-zinc-600 dark:text-white/60">
+              <p className="mb-2 text-xs sm:text-sm uppercase tracking-wide text-zinc-600 dark:text-zinc-400/80">
                 Base
               </p>
               <p className="text-base sm:text-lg">Barcelona — Remote</p>
@@ -211,15 +207,11 @@ export default function ContactPage() {
           <div>
             {/* email as button */}
             <button
-              onClick={() =>
-                (window.location.href = "mailto:hello@simoneconti.work")
-              }
+              onClick={() => (window.location.href = "mailto:hello@simoneconti.work")}
               className="
-                inline-flex items-center justify-center rounded-full
-                px-5 py-2.5 font-medium ring-1 ring-inset
-                w-full sm:w-auto
-                bg-zinc-900 text-white ring-zinc-900/10 hover:opacity-95
-                dark:bg-white/90 dark:text-black dark:ring-white/10
+                inline-flex items-center justify-center rounded-full px-5 py-2.5 font-medium ring-1 ring-inset w-full sm:w-auto
+                bg-zinc-900 text-zinc-50 ring-zinc-900/10 hover:opacity-95
+                dark:bg-zinc-50 dark:text-zinc-950 dark:ring-zinc-50/10
                 transition
               "
             >
@@ -229,7 +221,7 @@ export default function ContactPage() {
 
           <div>
             <Copy delay={1.2}>
-              <p className="mb-2 text-xs sm:text-sm uppercase tracking-wide text-zinc-600 dark:text-white/60">
+              <p className="mb-2 text-xs sm:text-sm uppercase tracking-wide text-zinc-600 dark:text-zinc-400/80">
                 Credits
               </p>
               <p className="text-base sm:text-lg">Built by Simone Conti</p>

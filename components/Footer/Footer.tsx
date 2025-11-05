@@ -46,23 +46,24 @@ export default function Footer() {
     <footer
       className="
         w-full px-4 py-8 sm:px-6 lg:px-8
-        bg-zinc-50 text-zinc-900
-        dark:bg-black dark:text-white
+        bg-[var(--bg)] text-[var(--fg)]
+        transition-colors
       "
     >
       {/* Meta */}
       <div
         className="
-          rounded-3xl border p-8 md:p-12
-          border-zinc-900/10 bg-white/60 backdrop-blur
+          rounded-3xl border p-8 md:p-12 backdrop-blur
+          border-zinc-900/10 bg-white/60
           dark:border-white/10 dark:bg-white/5
+          transition-colors
         "
       >
         {/* Header row */}
         <div className="mb-10 grid gap-8 md:mb-16 md:grid-cols-2">
           <div className="flex flex-col gap-4">
             <Copy delay={0.1}>
-              <h2 className="text-base font-medium text-zinc-800 dark:text-white/90">
+              <h2 className="text-base font-medium text-[var(--fg)]">
                 Simone Conti
               </h2>
             </Copy>
@@ -86,7 +87,7 @@ export default function Footer() {
                   href={l.href}
                   className="
                     text-base underline-offset-4 hover:underline
-                    text-zinc-900 dark:text-white
+                    text-[var(--fg)]
                   "
                 >
                   {l.label}
@@ -99,53 +100,33 @@ export default function Footer() {
         {/* Socials row */}
         <div className="grid items-start gap-8 md:grid-cols-2">
           <div ref={iconsRef} className="flex gap-2">
-            <a
-              href="https://linkedin.com/in/tuo-prof"
-              aria-label="LinkedIn"
-              target="_blank"
-              rel="noreferrer"
-              className="
-                js-icon grid h-10 w-10 place-items-center rounded-full
-                border ring-0 transition
-                border-zinc-900/10 bg-white/80 hover:bg-white
-                dark:border-white/10 dark:bg-white/10 dark:hover:bg-white/20
-              "
-            >
-              <RiLinkedinBoxLine className="text-xl" />
-            </a>
-            <a
-              href="https://github.com/tuo-username"
-              aria-label="GitHub"
-              target="_blank"
-              rel="noreferrer"
-              className="
-                js-icon grid h-10 w-10 place-items-center rounded-full
-                border ring-0 transition
-                border-zinc-900/10 bg-white/80 hover:bg-white
-                dark:border-white/10 dark:bg-white/10 dark:hover:bg-white/20
-              "
-            >
-              <RiGithubLine className="text-xl" />
-            </a>
-            <a
-              href="https://codepen.io/tuo-username"
-              aria-label="CodePen"
-              target="_blank"
-              rel="noreferrer"
-              className="
-                js-icon grid h-10 w-10 place-items-center rounded-full
-                border ring-0 transition
-                border-zinc-900/10 bg-white/80 hover:bg-white
-                dark:border-white/10 dark:bg-white/10 dark:hover:bg-white/20
-              "
-            >
-              <RiCodepenLine className="text-xl" />
-            </a>
+            {[
+              { href: "https://linkedin.com/in/tuo-prof", Icon: RiLinkedinBoxLine, label: "LinkedIn" },
+              { href: "https://github.com/tuo-username", Icon: RiGithubLine, label: "GitHub" },
+              { href: "https://codepen.io/tuo-username", Icon: RiCodepenLine, label: "CodePen" },
+            ].map(({ href, Icon, label }) => (
+              <a
+                key={label}
+                href={href}
+                aria-label={label}
+                target="_blank"
+                rel="noreferrer"
+                className="
+                  js-icon grid h-10 w-10 place-items-center rounded-full
+                  border ring-0 transition-colors
+                  text-current
+                  border-zinc-900/10 bg-white/80 hover:bg-white
+                  dark:border-white/10 dark:bg-white/10 dark:hover:bg-white/20
+                "
+              >
+                <Icon className="text-xl" />
+              </a>
+            ))}
           </div>
 
           <div className="md:text-right">
             <Copy delay={0.1}>
-              <p className="text-zinc-700 dark:text-white/70 md:ml-auto md:w-3/4">
+              <p className="text-[var(--fg)] md:ml-auto md:w-3/4">
                 Focused on React, Next.js, GSAP, and clean UI systems — crafting web products that move and perform.
               </p>
             </Copy>
@@ -157,17 +138,17 @@ export default function Footer() {
       <div
         className="
           mt-6 flex flex-col gap-3 overflow-hidden rounded-3xl border p-6
-          text-zinc-700 dark:text-white/80
-          border-zinc-900/10 bg-white/60
-          dark:border-white/10 dark:bg-white/5
+          border-zinc-900/10 bg-white/60 text-zinc-700
+          dark:border-white/10 dark:bg-white/5 dark:text-white/80
+          transition-colors
         "
       >
-        <div className="flex flex-col gap-2 text-sm md:flex-row md:gap-6 my-[140px]">
-          <p className="flex-1">
-            Developed by — <span className="text-zinc-900 dark:text-white">Simone Conti</span>
+        <div className="my-[140px] flex flex-col gap-2 text-sm md:flex-row md:gap-6 text-[var(--fg)]">
+          <p className="flex-1 text-[var(--fg)]">
+            Developed by — <span className="text-[var(--fg)]">Simone Conti</span>
           </p>
           <p className="flex-1 text-center md:text-left">This website uses cookies.</p>
-          <p className="flex-1 text-right md:text-right">
+          <p className="flex-1 text-right">
             All rights reserved © {new Date().getFullYear()}
           </p>
         </div>
