@@ -159,3 +159,28 @@
   .progress { inset-inline-end: 6px; height: 60vh; width: 10px; }
   .segItem::after { display: none; }
 }
+
+.root::selection {
+  background: color-mix(in oklab, var(--cmp-text) 16%, transparent);
+}
+
+.card,
+.cardGlow {
+  transition: background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+/* --- Shine: fallback sicuro se il bg-clip non parte --- */
+.shine {
+  /* fallback: mostra il testo nel colore normale */
+  color: var(--cmp-text);
+}
+
+@supports (-webkit-background-clip: text) or (background-clip: text) {
+  .shine {
+    color: transparent;
+    -webkit-background-clip: text;
+    background-clip: text;
+    /* necessario su Safari/iOS */
+    -webkit-text-fill-color: transparent;
+  }
+}

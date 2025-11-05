@@ -23,7 +23,7 @@ export default function AboutPage() {
   const cvHeaderRef = useRef<HTMLDivElement | null>(null);
   const cvListRef = useRef<HTMLDivElement | null>(null);
 
-  // nuovi refs per anim pack
+  // refs extra
   const headerRef = useRef<HTMLDivElement | null>(null);
   const h1aRef = useRef<HTMLHeadingElement | null>(null);
   const h1bRef = useRef<HTMLHeadingElement | null>(null);
@@ -40,7 +40,7 @@ export default function AboutPage() {
     };
   }, [ScrollTrigger]);
 
-  // blocco animazioni originali
+  // animazioni base
   useEffect(() => {
     if (!containerRef.current) return;
 
@@ -98,6 +98,7 @@ export default function AboutPage() {
       ScrollTrigger.create({
         trigger: cvWrapperRef.current,
         start: "top 55%",
+        once: true,
         onEnter: () => {
           gsap.to(hdr, { y: 0, duration: 1.1, ease: "power4.out", stagger: 0.04 });
           gsap.to(lst, { y: 0, duration: 1.1, ease: "power4.out", stagger: 0.02 });
@@ -138,7 +139,7 @@ export default function AboutPage() {
     };
   }, [gsap, ScrollTrigger]);
 
-  // animation pack extra (titles split+shine, portrait tilt+parallax, copy parallax)
+  // pack extra
   useEffect(() => {
     if (!containerRef.current) return;
     const elA = h1aRef.current;
@@ -250,14 +251,17 @@ export default function AboutPage() {
   }, [gsap, ScrollTrigger]);
 
   return (
-    <div ref={containerRef} className={styles.root}>
+    <div
+      ref={containerRef}
+      className={`${styles.root} bg-[var(--bg)] text-[var(--fg)]`}
+    >
       {/* Header */}
       <section
-        id="s-hero"
-        data-title="Intro"
-        ref={headerRef}
-        className={`${styles.sectionPad} ${styles.jsSection}`}
-      >
+  id="s-hero"
+  data-title="Intro"
+  ref={headerRef}
+  className={`${styles.sectionPad} ${styles.jsSection} relative z-10`}
+>
         <div className="flex flex-col gap-4 md:gap-6">
           <Copy delay={0.8}>
             <h1 ref={h1aRef} className={`${styles.h1} ${styles.shine} text-right`}>Hi</h1>
@@ -354,3 +358,12 @@ export default function AboutPage() {
     </div>
   );
 }
+
+<style jsx global>{`
+  #s-hero .line-wrapper,
+  #s-hero .line-wrapper .line,
+  #s-hero h1 {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+`}</style>
