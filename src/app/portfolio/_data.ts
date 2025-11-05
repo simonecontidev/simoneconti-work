@@ -32,20 +32,24 @@ export const PROJECTS: Project[] = [
       "A landscape in constant transition, where every shape, sound and shadow refuses to stay still.",
       "What seems stable begins to dissolve, and what fades returns again in rhythm with the scroll.",
     ],
+    tech: ["Next.js", "TypeScript", "GSAP", "Tailwind"],
+liveUrl: "https://example.com",
   },
   {
     slug: "camille-mormal",
     title: "Camille Mormal — Slider",
     period: "2018 — 2024",
     images: [
-      { src: "/portfolio/cm-hero.jpg", alt: "Hero — CM" },
-      { src: "/portfolio/cm-2.jpg" },
-      { src: "/portfolio/cm-3.jpg" },
+      { src: "/img-1.jpg", alt: "Hero — CM" },
+      { src: "/img-2.jpg" },
+      { src: "/img-3.jpg" },
     ],
     copy: [
       "A cinematic slider with letter-by-letter motion and parallax.",
       "Built for performance: lazy images, GPU transforms, minimal layout shifts.",
     ],
+    tech: ["Next.js", "TypeScript", "GSAP", "Tailwind"],
+liveUrl: "https://example.com",
   },
   // ...altri progetti
 ];
