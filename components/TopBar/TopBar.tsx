@@ -5,6 +5,22 @@ import useViewTransition from "../../hooks/useViewTransition";
 import AnimatedButton from "../../components/ui/AnimatedButton";
 import { useGsapRegister } from "@/lib/gsap";
 
+import ThemeToggle from '../../components/ThemeToggle/ThemeToggle'
+
+
+
+const themeInitScript = `
+(function() {
+  try {
+    var stored = localStorage.getItem('theme');
+    var system = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    var theme = stored || system;
+    var root = document.documentElement;
+    if (theme === 'dark') { root.classList.add('dark'); } else { root.classList.remove('dark'); }
+  } catch(e) {}
+})();
+`;
+
 export default function TopBar() {
   const barRef = useRef<HTMLDivElement | null>(null);
   const { navigateWithTransition } = useViewTransition();
@@ -68,8 +84,10 @@ export default function TopBar() {
       <AnimatedButton
         label="Contact me"
         route="/contact"
+        hoverLabel="View Work"
         onClick={() => navigateWithTransition("/contact")}
       />
+       <ThemeToggle />
     </div>
   );
 }

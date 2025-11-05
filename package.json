@@ -11,7 +11,11 @@
     "lint:fix": "next lint --fix"
   },
   "dependencies": {
+    "@emotion/react": "^11.14.0",
+    "@emotion/styled": "^11.14.1",
     "@gsap/react": "^2.1.2",
+    "@mui/icons-material": "^7.3.5",
+    "@mui/material": "^7.3.5",
     "clsx": "^2.1.1",
     "framer-motion": "^12.23.24",
     "gsap": "^3.13.0",
