@@ -1,3 +1,4 @@
+// components/Spotlight/Spotlight.tsx
 "use client";
 
 import { useRef, useEffect } from "react";
@@ -12,35 +13,45 @@ export default function Spotlight() {
     const root = rootRef.current;
     if (!root) return;
 
-    const containers = Array.from(root.querySelectorAll<HTMLElement>("[data-marquee]"));
+    // Split headings into chars una sola volta (solo sulle h1 dentro .marquee-text)
+    const headings = root.querySelectorAll<HTMLElement>(".marquee-text h1");
+    if (headings.length) new SplitType(headings, { types: "chars" });
 
+    const rows = Array.from(root.querySelectorAll<HTMLElement>(".js-row"));
     const kills: Array<() => void> = [];
 
-    // split headings into chars once
-    new SplitType(root.querySelectorAll(".marquee-text h1"), { types: "chars" });
-
-    containers.forEach((c, i) => {
-      const marquee = c.querySelector<HTMLElement>(".marquee");
+    rows.forEach((row, i) => {
+      const marquee = row.querySelector<HTMLElement>(".js-marquee");
       if (!marquee) return;
 
-      // horizontal drift
-      const toX = i % 2 === 0 ? "10%" : "-15%";
+      // Calcolo uno shift massimo in pixel, proporzionale alla larghezza del row,
+      // e lo "clampo" a 56px–120px circa per evitare di uscire dal viewport.
+      const computeShift = () => {
+        const w = row.getBoundingClientRect().width;
+        const pct = i % 2 === 0 ? 0.06 : -0.06; // ~6% in una direzione o nell’altra
+        const px = w * pct;
+        const clamped = Math.max(-120, Math.min(120, px));
+        return clamped;
+      };
+
+      let shift = computeShift();
+
+      // Drift orizzontale, sempre confinato nel container (grazie alla mask e overflow-hidden)
       const tween = gsap.to(marquee, {
-        x: toX,
+        x: shift,
         ease: "none",
         scrollTrigger: {
-          trigger: c,
+          trigger: row,
           start: "top bottom",
           end: "150% top",
           scrub: true,
         },
         force3D: true,
       });
-
       kills.push(() => tween.scrollTrigger?.kill());
 
-      // weight sweep on chars
-      const chars = c.querySelectorAll<HTMLElement>(".char");
+      // Weight sweep sui singoli char della headline
+      const chars = row.querySelectorAll<HTMLElement>(".char");
       if (chars.length) {
         const t2 = gsap.fromTo(
           chars,
@@ -51,7 +62,7 @@ export default function Spotlight() {
             fontVariationSettings: "'wght' 900",
             stagger: { each: 0.35, from: i % 2 === 0 ? "end" : "start" },
             scrollTrigger: {
-              trigger: c,
+              trigger: row,
               start: "50% bottom",
               end: "top top",
               scrub: true,
@@ -60,94 +71,145 @@ export default function Spotlight() {
         );
         kills.push(() => t2.scrollTrigger?.kill());
       }
+
+      // Recalcola shift al resize per mantenerlo entro viewport
+      const onResize = () => {
+        shift = computeShift();
+        gsap.set(marquee, { x: shift });
+        tween.scrollTrigger?.refresh();
+      };
+      window.addEventListener("resize", onResize);
+      kills.push(() => window.removeEventListener("resize", onResize));
     });
 
     ScrollTrigger.refresh();
-
     return () => kills.forEach((k) => k());
   }, [gsap, ScrollTrigger]);
 
   return (
-    <section ref={rootRef} className="bg-black py-24 md:py-40">
-      <div className="mx-auto flex h-[140svh] max-w-none flex-col justify-center gap-4 md:h-[150svh]">
+    <section
+      ref={rootRef}
+      className="
+        relative overflow-hidden
+        bg-zinc-50 text-zinc-900
+        dark:bg-black dark:text-white
+        py-20 sm:py-28 md:py-36
+      "
+    >
+      <div
+        className="
+          mx-auto w-full max-w-[1800px]
+          px-4 sm:px-6 md:px-8
+          flex flex-col gap-6 sm:gap-8 md:gap-10
+        "
+      >
         {/* Row 1 */}
-        <div data-marquee className="relative w-[125%] md:w-[125%] h-[220px] md:h-[250px]">
-          <div className="marquee absolute left-0 top-1/2 flex h-full w-full -translate-y-1/2 gap-4">
+        <div
+          className="
+            js-row relative w-full overflow-hidden
+            [mask-image:linear-gradient(to_right,transparent,black_8%,black_92%,transparent)]
+          "
+        >
+          <div
+            className="
+              js-marquee absolute left-0 top-1/2 flex w-full -translate-y-1/2 gap-3 sm:gap-4
+            "
+          >
             <div className="flex-1 overflow-hidden rounded-xl">
-              <img src="/about/portrait.jpg" className="h-full w-full object-cover" alt="" />
+              <img src="/about/portrait.jpg" className="h-[clamp(140px,22vw,260px)] w-full object-cover" alt="" />
             </div>
             <div className="marquee-text flex-1 grid place-items-center rounded-xl bg-transparent">
-              <h1 className="font-sans text-5xl font-black uppercase tracking-[-0.04em] md:text-6xl">
+              <h1 className="font-sans text-[clamp(28px,6vw,56px)] font-black uppercase tracking-[-0.02em] sm:tracking-[-0.03em]">
                 Frontend
               </h1>
             </div>
             <div className="flex-1 overflow-hidden rounded-xl">
-              <img src="/about/portrait.jpg" className="h-full w-full object-cover" alt="" />
+              <img src="/about/portrait.jpg" className="h-[clamp(140px,22vw,260px)] w-full object-cover" alt="" />
             </div>
             <div className="flex-1 overflow-hidden rounded-xl">
-              <img src="/about/portrait.jpg" className="h-full w-full object-cover" alt="" />
+              <img src="/about/portrait.jpg" className="h-[clamp(140px,22vw,260px)] w-full object-cover" alt="" />
             </div>
           </div>
+          {/* spacer per dare altezza alla riga */}
+          <div className="h-[clamp(140px,22vw,260px)]" />
         </div>
 
         {/* Row 2 */}
-        <div data-marquee className="relative w-[125%] h-[180px] md:h-[220px]">
-          <div className="marquee absolute left-0 top-1/2 flex h-full w-full -translate-y-1/2 gap-4">
+        <div
+          className="
+            js-row relative w-full overflow-hidden
+            [mask-image:linear-gradient(to_right,transparent,black_8%,black_92%,transparent)]
+          "
+        >
+          <div className="js-marquee absolute left-0 top-1/2 flex w-full -translate-y-1/2 gap-3 sm:gap-4">
             <div className="flex-1 overflow-hidden rounded-xl">
-              <img src="/about/portrait.jpg" className="h-full w-full object-cover" alt="" />
+              <img src="/about/portrait.jpg" className="h-[clamp(120px,18vw,220px)] w-full object-cover" alt="" />
             </div>
             <div className="flex-1 overflow-hidden rounded-xl">
-              <img src="/about/portrait.jpg" className="h-full w-full object-cover" alt="" />
+              <img src="/about/portrait.jpg" className="h-[clamp(120px,18vw,220px)] w-full object-cover" alt="" />
             </div>
             <div className="flex-1 overflow-hidden rounded-xl">
-              <img src="/about/portrait.jpg" className="h-full w-full object-cover" alt="" />
+              <img src="/about/portrait.jpg" className="h-[clamp(120px,18vw,220px)] w-full object-cover" alt="" />
             </div>
             <div className="marquee-text flex-1 grid place-items-center rounded-xl bg-transparent">
-              <h1 className="font-sans text-5xl font-black uppercase tracking-[-0.04em] md:text-6xl">
+              <h1 className="font-sans text-[clamp(26px,5.5vw,52px)] font-black uppercase tracking-[-0.02em] sm:tracking-[-0.03em]">
                 Developer
               </h1>
             </div>
           </div>
+          <div className="h-[clamp(120px,18vw,220px)]" />
         </div>
 
         {/* Row 3 */}
-        <div data-marquee className="relative w-[125%] h-[220px] md:h-[250px]">
-          <div className="marquee absolute left-0 top-1/2 flex h-full w-full -translate-y-1/2 gap-4">
+        <div
+          className="
+            js-row relative w-full overflow-hidden
+            [mask-image:linear-gradient(to_right,transparent,black_8%,black_92%,transparent)]
+          "
+        >
+          <div className="js-marquee absolute left-0 top-1/2 flex w-full -translate-y-1/2 gap-3 sm:gap-4">
             <div className="flex-1 overflow-hidden rounded-xl">
-              <img src="/about/portrait.jpg" className="h-full w-full object-cover" alt="" />
+              <img src="/about/portrait.jpg" className="h-[clamp(140px,22vw,260px)] w-full object-cover" alt="" />
             </div>
             <div className="marquee-text flex-1 grid place-items-center rounded-xl bg-transparent">
-              <h1 className="font-sans text-5xl font-black uppercase tracking-[-0.04em] md:text-6xl">
+              <h1 className="font-sans text-[clamp(28px,6vw,56px)] font-black uppercase tracking-[-0.02em] sm:tracking-[-0.03em]">
                 Barcelona
               </h1>
             </div>
             <div className="flex-1 overflow-hidden rounded-xl">
-              <img src="/about/portrait.jpg" className="h-full w-full object-cover" alt="" />
+              <img src="/about/portrait.jpg" className="h-[clamp(140px,22vw,260px)] w-full object-cover" alt="" />
             </div>
             <div className="flex-1 overflow-hidden rounded-xl">
-              <img src="/about/portrait.jpg" className="h-full w-full object-cover" alt="" />
+              <img src="/about/portrait.jpg" className="h-[clamp(140px,22vw,260px)] w-full object-cover" alt="" />
             </div>
           </div>
+          <div className="h-[clamp(140px,22vw,260px)]" />
         </div>
 
         {/* Row 4 */}
-        <div data-marquee className="relative w-[125%] h-[180px] md:h-[220px]">
-          <div className="marquee absolute left-0 top-1/2 flex h-full w-full -translate-y-1/2 gap-4">
+        <div
+          className="
+            js-row relative w-full overflow-hidden
+            [mask-image:linear-gradient(to_right,transparent,black_8%,black_92%,transparent)]
+          "
+        >
+          <div className="js-marquee absolute left-0 top-1/2 flex w-full -translate-y-1/2 gap-3 sm:gap-4">
             <div className="flex-1 overflow-hidden rounded-xl">
-              <img src="/about/portrait.jpg" className="h-full w-full object-cover" alt="" />
+              <img src="/about/portrait.jpg" className="h-[clamp(120px,18vw,220px)] w-full object-cover" alt="" />
             </div>
             <div className="flex-1 overflow-hidden rounded-xl">
-              <img src="/about/portrait.jpg" className="h-full w-full object-cover" alt="" />
+              <img src="/about/portrait.jpg" className="h-[clamp(120px,18vw,220px)] w-full object-cover" alt="" />
             </div>
             <div className="flex-1 overflow-hidden rounded-xl">
-              <img src="/about/portrait.jpg" className="h-full w-full object-cover" alt="" />
+              <img src="/about/portrait.jpg" className="h-[clamp(120px,18vw,220px)] w-full object-cover" alt="" />
             </div>
             <div className="marquee-text flex-1 grid place-items-center rounded-xl bg-transparent">
-              <h1 className="font-sans text-5xl font-black uppercase tracking-[-0.04em] md:text-6xl">
+              <h1 className="font-sans text-[clamp(26px,5.5vw,52px)] font-black uppercase tracking-[-0.02em] sm:tracking-[-0.03em]">
                 Based
               </h1>
             </div>
           </div>
+          <div className="h-[clamp(120px,18vw,220px)]" />
         </div>
       </div>
     </section>

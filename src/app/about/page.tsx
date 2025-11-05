@@ -1,6 +1,7 @@
+// app/about/page.tsx
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import Image from "next/image";
 import Copy from "../../../components/Copy/Copy";
 import Spotlight from "../../../components/Spotlight/Spotlight";
@@ -27,9 +28,6 @@ export default function AboutPage() {
   const h1aRef = useRef<HTMLHeadingElement | null>(null);
   const h1bRef = useRef<HTMLHeadingElement | null>(null);
   const portraitWrapRef = useRef<HTMLDivElement | null>(null);
-
-  // stato per segmenti progress (per aria-current)
-  const [activeIndex, setActiveIndex] = useState(0);
 
   // refresh iniziale
   useEffect(() => {
@@ -251,94 +249,8 @@ export default function AboutPage() {
     }
   }, [gsap, ScrollTrigger]);
 
-  // --- PROGRESS BAR per sezioni ---
-  useEffect(() => {
-    if (!containerRef.current) return;
-
-    const prefersReduced =
-      typeof window !== "undefined" &&
-      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-
-    const sections = Array.from(
-      containerRef.current.querySelectorAll<HTMLElement>(`.${styles.jsSection}`)
-    );
-
-    const segs = Array.from(
-      document.querySelectorAll<HTMLSpanElement>(`.${styles.segInner}`)
-    );
-    const items = Array.from(
-      document.querySelectorAll<HTMLLIElement>(`.${styles.segItem}`)
-    );
-
-    const triggers: ScrollTrigger[] = [];
-
-    sections.forEach((sec, i) => {
-      const st = ScrollTrigger.create({
-        trigger: sec,
-        start: "top 60%",
-        end: "bottom 40%",
-        onEnter: () => setActiveIndex(i),
-        onEnterBack: () => setActiveIndex(i),
-        onUpdate: (self) => {
-          if (prefersReduced) return;
-          const p = Math.max(0, Math.min(1, self.progress));
-          const seg = segs[i];
-          if (seg) seg.style.transform = `scaleY(${p})`;
-        },
-      });
-      triggers.push(st);
-    });
-
-    // reset al cambio tema (opzionale)
-    const onTheme = () => triggers.forEach((t) => t.refresh());
-    window.addEventListener("themechange" as any, onTheme);
-
-    return () => {
-      triggers.forEach((t) => t.kill());
-      window.removeEventListener("themechange" as any, onTheme);
-    };
-  }, []);
-
-  // elenco sezioni per la barra (id deve combaciare con markup)
-  const PROGRESS_SECTIONS = [
-    { id: "s-hero", title: "Intro" },
-    { id: "s-about", title: "Bio" },
-    { id: "s-heroimg", title: "Studio" },
-    { id: "s-cv", title: "CV" },
-  ];
-
-  const scrollToId = (id: string) => {
-    const el = document.getElementById(id);
-    if (!el) return;
-    el.scrollIntoView({ behavior: "smooth", block: "start" });
-  };
-
   return (
     <div ref={containerRef} className={styles.root}>
-      {/* PROGRESS BAR FISSA */}
-      <nav className={styles.progress} aria-label="Section progress">
-        <ul className={styles.progressList} role="list">
-          {PROGRESS_SECTIONS.map((s, i) => (
-            <li
-              key={s.id}
-              className={`${styles.segItem} ${i === activeIndex ? styles.active : ""}`}
-              data-title={s.title}
-            >
-              <button
-                type="button"
-                aria-label={`Go to ${s.title}`}
-                aria-current={i === activeIndex ? "true" : undefined}
-                className={styles.segBtn}
-                onClick={() => scrollToId(s.id)}
-              >
-                <span className={styles.segTrack} />
-                <span className={styles.segInner} />
-              </button>
-            </li>
-          ))}
-        </ul>
-      </nav>
-
       {/* Header */}
       <section
         id="s-hero"
