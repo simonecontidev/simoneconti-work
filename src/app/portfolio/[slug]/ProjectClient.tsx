@@ -78,14 +78,15 @@ export default function ProjectClient({ slug }: { slug: string }) {
   );
   const project = PROJECTS[currentIndex] ?? PROJECTS[0];
   const nextIndex = (currentIndex + 1) % PROJECTS.length;
+  const prevIndex = (currentIndex - 1 + PROJECTS.length) % PROJECTS.length;
   const next = PROJECTS[nextIndex];
+  const prev = PROJECTS[prevIndex];
 
   // images: supporta sia {src,alt} che string
   const heroSrc =
     typeof project.images?.[0] === "string" ? project.images?.[0] : project.images?.[0]?.src;
   const heroAlt =
     typeof project.images?.[0] === "string" ? "" : project.images?.[0]?.alt ?? project.title;
-
   const gallery = (project.images ?? []).slice(1);
 
   const rootRef = useRef<HTMLDivElement | null>(null);
@@ -147,7 +148,7 @@ export default function ProjectClient({ slug }: { slug: string }) {
     }
   }, [project, gsap, ScrollTrigger]);
 
-  // ---- SCROLL-TO-NAVIGATE (bidirezionale VT + GSAP) ----
+  // ---- SCROLL DOWN → NEXT (bidirezionale VT + GSAP) ----
   useEffect(() => {
     if (!nextRef.current) return;
 
@@ -171,9 +172,73 @@ export default function ProjectClient({ slug }: { slug: string }) {
     return () => trigger.kill();
   }, [router, next.slug, next.title, gsap, ScrollTrigger]);
 
+  // ---- SCROLL UP in cima → PREV (wheel / touch / key) ----
+  useEffect(() => {
+    let touchStartY = 0;
+    let wheelCooldown = false;
+    let touchCooldown = false;
+
+    const goPrev = async () => {
+      if (pushedRef.current) return;
+      if (document.body.style.overflow === "hidden") return; // già in transizione
+      pushedRef.current = true;
+
+      await navigateProjectWithTransition({
+        router,
+        href: `/portfolio/${prev.slug}`,
+        overlay: overlayRef.current,
+        nextTitle: prev.title, // mostrato nell’overlay
+      });
+    };
+
+    const onWheel = (e: WheelEvent) => {
+      if (wheelCooldown) return;
+      // deltaY < 0 = scroll up; siamo in cima?
+      if (window.scrollY <= 0 && e.deltaY < -30) {
+        wheelCooldown = true;
+        goPrev();
+        setTimeout(() => (wheelCooldown = false), 1000);
+      }
+    };
+
+    const onKey = (e: KeyboardEvent) => {
+      if (window.scrollY > 0) return;
+      if (e.key === "ArrowUp" || e.key === "PageUp" || e.key === "Home") {
+        goPrev();
+      }
+    };
+
+    const onTouchStart = (e: TouchEvent) => {
+      if (e.touches && e.touches[0]) touchStartY = e.touches[0].clientY;
+    };
+    const onTouchMove = (e: TouchEvent) => {
+      if (touchCooldown) return;
+      if (window.scrollY > 0) return;
+      const y = e.touches && e.touches[0] ? e.touches[0].clientY : touchStartY;
+      const dy = y - touchStartY; // >0 = swipe down (scroll up)
+      if (dy > 60) {
+        touchCooldown = true;
+        goPrev();
+        setTimeout(() => (touchCooldown = false), 1200);
+      }
+    };
+
+    window.addEventListener("wheel", onWheel, { passive: true });
+    window.addEventListener("keydown", onKey);
+    window.addEventListener("touchstart", onTouchStart, { passive: true });
+    window.addEventListener("touchmove", onTouchMove, { passive: true });
+
+    return () => {
+      window.removeEventListener("wheel", onWheel);
+      window.removeEventListener("keydown", onKey);
+      window.removeEventListener("touchstart", onTouchStart);
+      window.removeEventListener("touchmove", onTouchMove);
+    };
+  }, [router, prev.slug, prev.title]);
+
   return (
     <div ref={rootRef} className="min-h-screen" data-page>
-      {/* Overlay transizione – dinamico nel titolo */}
+      {/* Overlay transizione – dinamico nel titolo (escluso da VT) */}
       <div
         ref={overlayRef}
         className="fixed inset-0 z-[999] opacity-0 pointer-events-none bg-gradient-to-t from-black via-neutral-950 to-black vt-static"
@@ -187,7 +252,7 @@ export default function ProjectClient({ slug }: { slug: string }) {
       </div>
 
       <div className="mx-auto max-w-5xl px-6">
-        {/* Titolo + periodo (dinamici) */}
+        {/* Titolo + periodo */}
         <div className="mx-auto mb-6 mt-8 w-full max-w-2xl text-center">
           <h1 className="pj-title text-5xl font-semibold md:text-6xl">
             {project.title}
@@ -197,7 +262,7 @@ export default function ProjectClient({ slug }: { slug: string }) {
           <div className="pj-date mb-12 text-center text-white/70">{project.period}</div>
         )}
 
-        {/* Hero (dinamico) */}
+        {/* Hero */}
         {heroSrc && (
           <div className="pj-img-clip relative mb-12 h-[60vh] overflow-hidden rounded-2xl border border-white/10">
             <Image
@@ -206,36 +271,40 @@ export default function ProjectClient({ slug }: { slug: string }) {
               fill
               className="object-cover"
               priority
-              // Optional: continuity fra pagine
               // style={{ viewTransitionName: `hero-${project.slug}` }}
             />
           </div>
         )}
 
-        {/* Copy blocks (dinamici) */}
+        {/* Copy */}
         {(project.copy ?? []).map((paragraph, i) => (
           <div key={`copy-${i}`} className="pj-copy mx-auto my-24 max-w-3xl">
-            <CopyReveal className="text-lg md:text-xl text-white" start={i === 0 ? "top 80%" : "top 85%"} fromY={i === 0 ? 36 : 40}>
+            <CopyReveal
+              className="text-lg md:text-xl text-white"
+              start={i === 0 ? "top 80%" : "top 85%"}
+              fromY={i === 0 ? 36 : 40}
+            >
               {paragraph}
             </CopyReveal>
           </div>
         ))}
 
-        {/* Gallery (dinamica) */}
+        {/* Gallery */}
         {gallery.map((img, i) => {
           const src = typeof img === "string" ? img : img.src;
           const alt = typeof img === "string" ? "" : img.alt ?? project.title;
+          const isLast = i === gallery.length - 1;
           return (
             <div
               key={`g-${i}`}
-              className={`pj-img-clip-st relative mb-${i === gallery.length - 1 ? "16" : "10"} h-[55vh] overflow-hidden rounded-2xl border border-white/10`}
+              className={`pj-img-clip-st relative mb-${isLast ? "16" : "10"} h-[55vh] overflow-hidden rounded-2xl border border-white/10`}
             >
               <Image src={src} alt={alt} fill className="object-cover" />
             </div>
           );
         })}
 
-        {/* Teaser Next (dinamico) */}
+        {/* Next project teaser */}
         <div ref={nextRef} className="relative mx-auto mb-24 mt-28 max-w-2xl text-center">
           <div className="mb-2 text-sm text-white/60">Next project</div>
           <a
@@ -255,7 +324,9 @@ export default function ProjectClient({ slug }: { slug: string }) {
           >
             {next.title}
           </a>
-          <div className="mt-6 text-xs text-white/50">Continua a scorrere per aprire →</div>
+          <div className="mt-6 text-xs text-white/50">
+            Continua a scorrere per aprire →
+          </div>
         </div>
       </div>
     </div>
