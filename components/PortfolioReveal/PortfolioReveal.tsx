@@ -7,7 +7,6 @@ import styles from "./PortfolioReveal.module.css";
 import { PROJECTS } from "./_data"; // usa la tua sorgente
 
 type Project = (typeof PROJECTS)[number];
-
 type RevealDirection = "top" | "bottom" | "left" | "right";
 
 export default function PortfolioReveal({
@@ -38,7 +37,6 @@ export default function PortfolioReveal({
   const rootRef = useRef<HTMLDivElement>(null);
   const bgRef = useRef<HTMLDivElement>(null);
 
-  // token override locali (opzionali); di default agganciati ai global token
   const cssVars = useMemo<React.CSSProperties>(() => ({}), []);
 
   useEffect(() => {
@@ -76,13 +74,20 @@ export default function PortfolioReveal({
           const img = card.querySelector<HTMLImageElement>(`.${styles.img}`);
           const media = card.querySelector<HTMLDivElement>(`.${styles.media}`);
           const title = card.querySelector<HTMLParagraphElement>(`.${styles.title}`);
+          const role = card.querySelector<HTMLParagraphElement>(`.${styles.role}`);
           if (!img || !media || !title) return;
 
           // init
           gsap.set(img, { clipPath: clipStart, scale: 1.05, willChange: "clip-path, transform" });
-          if (fadeUp) gsap.set(media, { opacity: 0.9, y: fadeUpOffset }); // leggero fade-up wrapper
+          if (fadeUp) gsap.set(media, { opacity: 0.9, y: fadeUpOffset });
 
-          // reveal clip + fade-up
+          // ⬇️ titolo sempre visibile
+          gsap.set(title, { y: 0, opacity: 1 });
+
+          // ⬇️ role nascosto: comparirà solo on hover/focus
+          if (role) gsap.set(role, { y: 12, opacity: 0 });
+
+          // reveal clip + fade-up wrapper
           gsap.fromTo(
             img,
             { clipPath: clipStart, scale: 1.05 },
@@ -138,7 +143,7 @@ export default function PortfolioReveal({
             }
           );
 
-          // parallax solo verticale (alternato per colonna)
+          // parallax
           if (enableParallax) {
             const amount = isMobile ? parallaxAmount * parallaxMobileScale : parallaxAmount;
             const isRightCol = index % 2 === 1;
@@ -160,19 +165,23 @@ export default function PortfolioReveal({
             );
           }
 
-          // hover effects (come nel tuo portfolio originale)
-          card.addEventListener("mouseenter", () => {
+          // hover/focus: img zoom + role reveal (titolo non si muove)
+          const onEnter = () => {
             gsap.to(img, { scale: 1.12, duration: 1.2, ease: "power4.out" });
-            gsap.to(title, { y: 0, duration: 0.7, ease: "power4.out" });
-          });
-          card.addEventListener("mouseleave", () => {
+            if (role) gsap.to(role, { y: 0, opacity: 1, duration: 0.6, ease: "power3.out", delay: 0.06 });
+          };
+          const onLeave = () => {
             gsap.to(img, { scale: 1.0, duration: 1.2, ease: "power4.out" });
-            gsap.to(title, { y: 24, duration: 0.7, ease: "power4.out" });
-          });
+            if (role) gsap.to(role, { y: 12, opacity: 0, duration: 0.45, ease: "power3.out" });
+          };
+
+          card.addEventListener("mouseenter", onEnter);
+          card.addEventListener("mouseleave", onLeave);
+          card.addEventListener("focus", onEnter, true);
+          card.addEventListener("blur", onLeave, true);
         });
       }, rootRef);
 
-      // reazione al toggle tema
       const onThemeChange = () => {
         if (!bgRef.current || !rootRef.current) return;
         const accent = getComputedStyle(rootRef.current)
@@ -236,7 +245,6 @@ export default function PortfolioReveal({
               />
             </div>
 
-            {/* titolo dentro la card + role come nel tuo componente */}
             <div className={styles.meta}>
               <div className={styles.titleMask}>
                 <p className={styles.title} aria-hidden>

@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
-import NextImage from "next/image";               
+import NextImage from "next/image";
 import { PROJECTS } from "./_data";
 import { useGsapRegister } from "@/lib/gsap";
 
@@ -21,7 +21,7 @@ export default function PortfolioClient() {
       const tasks = PROJECTS.map(
         (p) =>
           new Promise<void>((res) => {
-            const img = new window.Image();       // 👈 usa il costruttore globale
+            const img = new window.Image();
             img.onload = () => res();
             img.onerror = () => res();
             img.src = `/portfolio/${p.img}`;
@@ -35,30 +35,67 @@ export default function PortfolioClient() {
 
   useEffect(() => {
     if (!isLoaded || !rootRef.current) return;
-    const ctx = gsap.context(() => {
-      gsap.fromTo(".portfolio-header h1", { y: 64 }, { y: 0, delay: 0.6, duration: 1.2, ease: "power4.out" });
-      const cols = gsap.utils.toArray<HTMLElement>(".p-col");
-      gsap.set(cols, { clipPath: "polygon(0 100%,100% 100%,100% 100%,0 100%)" });
-      gsap.to(cols, { clipPath: "polygon(0 100%,100% 100%,100% 0%,0 0%)", delay: 0.8, duration: 1.2, ease: "power4.out", stagger: 0.08 });
 
+    const ctx = gsap.context(() => {
+      // header
+      gsap.fromTo(
+        ".portfolio-header h1",
+        { y: 64 },
+        { y: 0, delay: 0.6, duration: 1.2, ease: "power4.out" }
+      );
+
+      const cols = gsap.utils.toArray<HTMLElement>(".p-col");
+
+      // reveal colonne
+      gsap.set(cols, {
+        clipPath: "polygon(0 100%,100% 100%,100% 100%,0 100%)",
+      });
+      gsap.to(cols, {
+        clipPath: "polygon(0 100%,100% 100%,100% 0%,0 0%)",
+        delay: 0.8,
+        duration: 1.2,
+        ease: "power4.out",
+        stagger: 0.08,
+      });
+
+      // stato iniziale overlays
+      gsap.set(".p-title", { y: 0, opacity: 1 }); // titolo sempre visibile
+      gsap.set(".p-role", { y: 12, opacity: 0 }); // role nascosto
+
+      // hover handlers
       cols.forEach((col) => {
         const img = col.querySelector(".p-img") as HTMLElement | null;
-        const title = col.querySelector(".p-title") as HTMLElement | null;
-        if (!img || !title) return;
+        const role = col.querySelector(".p-role") as HTMLElement | null;
+
         col.addEventListener("mouseenter", () => {
-          gsap.to(img, { scale: 1.15, duration: 1.6, ease: "power4.out" });
-          gsap.to(title, { y: 0, duration: 0.8, ease: "power4.out" });
+          if (img) gsap.to(img, { scale: 1.15, duration: 1.2, ease: "power4.out" });
+          if (role)
+            gsap.to(role, {
+              y: 0,
+              opacity: 1,
+              duration: 0.6,
+              ease: "power3.out",
+              delay: 0.08,
+            });
         });
+
         col.addEventListener("mouseleave", () => {
-          gsap.to(img, { scale: 1, duration: 1.6, ease: "power4.out" });
-          gsap.to(title, { y: 24, duration: 0.8, ease: "power4.out" });
+          if (img) gsap.to(img, { scale: 1, duration: 1.2, ease: "power4.out" });
+          if (role)
+            gsap.to(role, {
+              y: 12,
+              opacity: 0,
+              duration: 0.5,
+              ease: "power3.out",
+            });
         });
       });
     }, rootRef);
+
     return () => ctx.revert();
   }, [gsap, isLoaded]);
 
-  // Chunk con typing corretto: Project[][] 
+  // Chunk con typing corretto: Project[][]
   const rows = useMemo(() => {
     const out: Project[][] = [];
     for (let i = 0; i < PROJECTS.length; i += 3) out.push(PROJECTS.slice(i, i + 3));
@@ -93,23 +130,31 @@ export default function PortfolioClient() {
                     sizes="(max-width:768px) 100vw, (max-width:1280px) 50vw, 33vw"
                     priority={idx < 1}
                   />
+
                   <div className="absolute left-4 bottom-4">
                     <div className="clip-mask">
-                      <p className="p-title translate-y-6 text-lg font-medium tracking-tight" aria-hidden>
-
-                        {p.title}
-         
-
+                      {/* Titolo sempre visibile */}
+                      <p className="p-title text-lg font-medium tracking-tight">
+                        {p.role}
+                       
                       </p>
                     </div>
-                    <p className="mt-1 text-xs text-white/60">{p.role}</p>
+                    {/* Role che compare dopo */}
+                    <p className="p-role mt-1 text-xs text-white/80">
+                       {p.title}
+                    </p>
                   </div>
                 </Link>
               ))}
             </div>
           ))}
       </div>
-      <style jsx global>{`.clip-mask{clip-path:polygon(0% 0%,100% 0%,100% 100%,0% 100%);}`}</style>
+
+      <style jsx global>{`
+        .clip-mask {
+          clip-path: polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%);
+        }
+      `}</style>
     </div>
   );
 }
