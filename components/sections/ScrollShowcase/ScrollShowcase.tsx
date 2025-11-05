@@ -6,6 +6,9 @@ import Image from "next/image";
 import styles from "./ScrollShowcase.module.css";
 import type { ScrollShowcaseProps } from "./types";
 
+import ScrollImageReveal from "../../components/ScrollImageReveal/ScrollImageReveal";
+
+
 export default function ScrollShowcase({
   hero,
   outro,
@@ -128,12 +131,12 @@ export default function ScrollShowcase({
         <h1 className={styles.ssAnimateText}>{copyText}</h1>
       </section>
 
-      {/* OUTRO */}
+      {/* OUTRO 
       <section className={styles.ssOutro}>
         <div className={styles.ssOutroMedia}>
           <Image src={outro.src} alt={outro.alt ?? "Outro"} fill sizes="300px" />
         </div>
-      </section>
+      </section>*/}
     </div>
   );
 }
