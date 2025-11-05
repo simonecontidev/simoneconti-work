@@ -52,10 +52,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       {/* Usa i token CSS definiti in global.css: background: var(--bg); color: var(--fg) */}
       {/* Evita utility colore Tailwind qui per non sovrascrivere i token */}
       <body>
-        <TopBar />
+                <TopBar className="vt-static" />
+
         {children}
-        <Nav />
-        <Footer />
+        <Nav className="vt-static" />
+        <Footer className="vt-static" />
       </body>
 
       {/* Overlay opzionale che già hai */}

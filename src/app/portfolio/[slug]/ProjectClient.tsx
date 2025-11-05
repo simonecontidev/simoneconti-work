@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import Image from "next/image";
 import { useGsapRegister } from "@/lib/gsap";
 import { PROJECTS } from "@/app/portfolio/_data";
 import { useRouter } from "next/navigation";
+import { navigateProjectWithTransition } from "@/lib/pageTransition";
 
 function CopyReveal({
   children,
@@ -28,10 +29,8 @@ function CopyReveal({
         (await import("@/lib/SplitType")).default ??
         (await import("../../../lib/SplitType/index")).default;
 
-      // 1) split per linee
       const split = new SplitType(ref.current, { types: "lines", tagName: "span" });
 
-      // 2) wrappa ogni linea in un contenitore con clip-path
       split.lines.forEach((line: HTMLElement) => {
         const wrapper = document.createElement("div");
         wrapper.className = "line";
@@ -39,33 +38,26 @@ function CopyReveal({
         wrapper.appendChild(line);
       });
 
-      // 3) stato iniziale + animazione on-scroll
-      gsap.set(ref.current.querySelectorAll(".line > span"), {
-        y: fromY,
-        opacity: 0,
-      });
+      const targets = ref.current.querySelectorAll(".line > span");
+      const { gsap } = await import("gsap");
+      gsap.set(targets, { y: fromY, opacity: 0 });
 
-      gsap.to(ref.current.querySelectorAll(".line > span"), {
+      gsap.to(targets, {
         y: 0,
         opacity: 1,
         duration: 1,
         ease: "power4.out",
         stagger: 0.02,
-        scrollTrigger: {
-          trigger: ref.current,
-          start,
-          once: true,
-        },
+        scrollTrigger: { trigger: ref.current, start, once: true },
       });
 
-      // cleanup
       return () => {
         try {
-          if ((split as any)?.revert) (split as any).revert();
+          (split as any)?.revert?.();
         } catch {}
       };
     })();
-  }, [gsap, ScrollTrigger, fromY, start]);
+  }, [fromY, start]);
 
   return (
     <div ref={ref} className={className}>
@@ -79,21 +71,31 @@ export default function ProjectClient({ slug }: { slug: string }) {
   const router = useRouter();
   const pushedRef = useRef(false);
 
-  // compute next project by slug (wrap-around)
-  const currentIndex = Math.max(0, PROJECTS.findIndex((p) => p.slug === slug));
+  // ---- DATI DINAMICI ----
+  const currentIndex = useMemo(
+    () => Math.max(0, PROJECTS.findIndex((p) => p.slug === slug)),
+    [slug]
+  );
+  const project = PROJECTS[currentIndex] ?? PROJECTS[0];
   const nextIndex = (currentIndex + 1) % PROJECTS.length;
   const next = PROJECTS[nextIndex];
+
+  // images: supporta sia {src,alt} che string
+  const heroSrc =
+    typeof project.images?.[0] === "string" ? project.images?.[0] : project.images?.[0]?.src;
+  const heroAlt =
+    typeof project.images?.[0] === "string" ? "" : project.images?.[0]?.alt ?? project.title;
+
+  const gallery = (project.images ?? []).slice(1);
 
   const rootRef = useRef<HTMLDivElement | null>(null);
   const nextRef = useRef<HTMLDivElement | null>(null);
   const overlayRef = useRef<HTMLDivElement | null>(null);
 
-  // piccoli reveal/images clip già presenti (lasciati intatti)
+  // ---- REVEAL DINAMICI ----
   useEffect(() => {
     const root = rootRef.current;
     if (!root) return;
-
-    const kills: Array<() => void> = [];
 
     // image clip reveal
     const clips = Array.from(root.querySelectorAll<HTMLElement>(".pj-img-clip"));
@@ -119,35 +121,33 @@ export default function ProjectClient({ slug }: { slug: string }) {
     });
 
     // title reveal
-    const title = root.querySelector<HTMLElement>(".pj-title");
-    if (title) {
-      gsap.set(title, { y: 24, opacity: 0 });
-      gsap.to(title, {
+    const titleEl = root.querySelector<HTMLElement>(".pj-title");
+    if (titleEl) {
+      gsap.set(titleEl, { y: 24, opacity: 0 });
+      gsap.to(titleEl, {
         y: 0,
         opacity: 1,
         duration: 1.1,
         ease: "power3.out",
-        scrollTrigger: { trigger: title, start: "top 85%" },
+        scrollTrigger: { trigger: titleEl, start: "top 85%" },
       });
     }
 
-    // date reveal
-    const date = root.querySelector<HTMLElement>(".pj-date");
-    if (date) {
-      gsap.set(date, { y: 16, opacity: 0 });
-      gsap.to(date, {
+    // date/period reveal
+    const dateEl = root.querySelector<HTMLElement>(".pj-date");
+    if (dateEl) {
+      gsap.set(dateEl, { y: 16, opacity: 0 });
+      gsap.to(dateEl, {
         y: 0,
         opacity: 1,
         duration: 0.9,
         ease: "power3.out",
-        scrollTrigger: { trigger: date, start: "top 90%" },
+        scrollTrigger: { trigger: dateEl, start: "top 90%" },
       });
     }
+  }, [project, gsap, ScrollTrigger]);
 
-    return () => kills.forEach((k) => k());
-  }, [gsap, ScrollTrigger]);
-
-   // *** SCROLL-TO-NAVIGATE LOGICA ***
+  // ---- SCROLL-TO-NAVIGATE (bidirezionale VT + GSAP) ----
   useEffect(() => {
     if (!nextRef.current) return;
 
@@ -155,118 +155,103 @@ export default function ProjectClient({ slug }: { slug: string }) {
       trigger: nextRef.current,
       start: "top 45%",
       once: true,
-      onEnter: () => {
+      onEnter: async () => {
         if (pushedRef.current) return;
         pushedRef.current = true;
 
-        const ov = overlayRef.current;
-        if (ov) {
-          const tl = gsap.timeline({
-            defaults: { ease: "power4.inOut" },
-            onComplete: () => router.push(`/portfolio/${next.slug}`),
-          });
-
-          // fade in overlay con leggero blur e gradient
-          gsap.set(ov, {
-            yPercent: 100,
-            opacity: 1,
-            filter: "blur(0px)",
-            pointerEvents: "auto",
-          });
-
-          tl.to(ov, {
-            yPercent: 0,
-            duration: 1.25,
-          })
-            // testo che entra in scena
-            .fromTo(
-              ".transition-title",
-              { opacity: 0, letterSpacing: "0.1em", y: 40 },
-              {
-                opacity: 1,
-                y: 0,
-                letterSpacing: "0em",
-                duration: 1.1,
-              },
-              "-=0.8"
-            )
-            .to({}, { duration: 0.2 }); // piccola pausa prima del push
-        } else {
-          router.push(`/portfolio/${next.slug}`);
-        }
+        await navigateProjectWithTransition({
+          router,
+          href: `/portfolio/${next.slug}`,
+          overlay: overlayRef.current,
+          nextTitle: next.title,
+        });
       },
     });
 
     return () => trigger.kill();
-  }, [gsap, ScrollTrigger, router, next.slug]);
-
-  const title = PROJECTS[currentIndex]?.title ?? slug.replaceAll("-", " ");
+  }, [router, next.slug, next.title, gsap, ScrollTrigger]);
 
   return (
-    <div ref={rootRef} className="min-h-screen">
-      {/* Route transition overlay */}
+    <div ref={rootRef} className="min-h-screen" data-page>
+      {/* Overlay transizione – dinamico nel titolo */}
       <div
-  ref={overlayRef}
-  className="fixed inset-0 z-[999] opacity-0 pointer-events-none bg-black"
-  aria-hidden="true"
->
-  <div className="absolute inset-0 grid place-items-center">
-    <h2 className="transition-title text-white text-4xl md:text-6xl font-semibold tracking-tight">
-      {next?.title}
-    </h2>
-  </div>
-</div>
+        ref={overlayRef}
+        className="fixed inset-0 z-[999] opacity-0 pointer-events-none bg-gradient-to-t from-black via-neutral-950 to-black vt-static"
+        aria-hidden="true"
+      >
+        <div className="absolute inset-0 grid place-items-center">
+          <h2 className="transition-title text-white text-4xl md:text-6xl font-semibold tracking-tight">
+            {next?.title}
+          </h2>
+        </div>
+      </div>
 
       <div className="mx-auto max-w-5xl px-6">
-        {/* Title + date */}
+        {/* Titolo + periodo (dinamici) */}
         <div className="mx-auto mb-6 mt-8 w-full max-w-2xl text-center">
-          <h1 className="pj-title text-5xl font-semibold md:text-6xl">{title}</h1>
+          <h1 className="pj-title text-5xl font-semibold md:text-6xl">
+            {project.title}
+          </h1>
         </div>
-        <div className="pj-date mb-12 text-center text-white/70">2011 — 2017</div>
+        {project.period && (
+          <div className="pj-date mb-12 text-center text-white/70">{project.period}</div>
+        )}
 
-        {/* Hero image */}
-        <div className="pj-img-clip relative mb-12 h-[60vh] overflow-hidden rounded-2xl border border-white/10">
-          <Image src="/portfolio/project-1.jpg" alt="" fill className="object-cover" priority />
-        </div>
+        {/* Hero (dinamico) */}
+        {heroSrc && (
+          <div className="pj-img-clip relative mb-12 h-[60vh] overflow-hidden rounded-2xl border border-white/10">
+            <Image
+              src={heroSrc}
+              alt={heroAlt || ""}
+              fill
+              className="object-cover"
+              priority
+              // Optional: continuity fra pagine
+              // style={{ viewTransitionName: `hero-${project.slug}` }}
+            />
+          </div>
+        )}
 
-        {/* Copy block 1 */}
-        <div className="pj-copy mx-auto my-24 max-w-3xl">
-          <CopyReveal className="text-lg md:text-xl text-white">
-            Lorem ipsum dolor sit amet…
-          </CopyReveal>
-        </div>
+        {/* Copy blocks (dinamici) */}
+        {(project.copy ?? []).map((paragraph, i) => (
+          <div key={`copy-${i}`} className="pj-copy mx-auto my-24 max-w-3xl">
+            <CopyReveal className="text-lg md:text-xl text-white" start={i === 0 ? "top 80%" : "top 85%"} fromY={i === 0 ? 36 : 40}>
+              {paragraph}
+            </CopyReveal>
+          </div>
+        ))}
 
-        {/* Gallery */}
-        <div className="pj-img-clip-st relative mb-10 h-[55vh] overflow-hidden rounded-2xl border border-white/10">
-          <Image src="/portfolio/project-2.jpg" alt="" fill className="object-cover" />
-        </div>
-        <div className="pj-img-clip-st relative mb-10 h-[55vh] overflow-hidden rounded-2xl border border-white/10">
-          <Image src="/portfolio/project-3.jpg" alt="" fill className="object-cover" />
-        </div>
+        {/* Gallery (dinamica) */}
+        {gallery.map((img, i) => {
+          const src = typeof img === "string" ? img : img.src;
+          const alt = typeof img === "string" ? "" : img.alt ?? project.title;
+          return (
+            <div
+              key={`g-${i}`}
+              className={`pj-img-clip-st relative mb-${i === gallery.length - 1 ? "16" : "10"} h-[55vh] overflow-hidden rounded-2xl border border-white/10`}
+            >
+              <Image src={src} alt={alt} fill className="object-cover" />
+            </div>
+          );
+        })}
 
-        {/* Copy block 2 */}
-        <div className="pj-copy mx-auto my-24 max-w-3xl">
-          <CopyReveal className="text-lg md:text-xl" start="top 85%" fromY={40}>
-            Altro testo di esempio…
-          </CopyReveal>
-        </div>
-
-        <div className="pj-img-clip-st relative mb-10 h-[55vh] overflow-hidden rounded-2xl border border-white/10">
-          <Image src="/portfolio/project-4.jpg" alt="" fill className="object-cover" />
-        </div>
-        <div className="pj-img-clip-st relative mb-10 h-[55vh] overflow-hidden rounded-2xl border border-white/10">
-          <Image src="/portfolio/project-5.jpg" alt="" fill className="object-cover" />
-        </div>
-        <div className="pj-img-clip-st relative mb-16 h-[55vh] overflow-hidden rounded-2xl border border-white/10">
-          <Image src="/portfolio/project-6.jpg" alt="" fill className="object-cover" />
-        </div>
-
-        {/* Next project: scroll-to-navigate */}
+        {/* Teaser Next (dinamico) */}
         <div ref={nextRef} className="relative mx-auto mb-24 mt-28 max-w-2xl text-center">
           <div className="mb-2 text-sm text-white/60">Next project</div>
           <a
             href={`/portfolio/${next.slug}`}
             className="inline-block text-2xl font-medium hover:underline"
+            onClick={(e) => {
+              e.preventDefault();
+              if (pushedRef.current) return;
+              pushedRef.current = true;
+              navigateProjectWithTransition({
+                router,
+                href: `/portfolio/${next.slug}`,
+                overlay: overlayRef.current,
+                nextTitle: next.title,
+              });
+            }}
           >
             {next.title}
           </a>
