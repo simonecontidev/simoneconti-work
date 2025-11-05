@@ -2,6 +2,7 @@
 import "./globals.css";
 import type { Metadata } from "next";
 import { Martian_Mono, Fraunces } from "next/font/google";
+import Script from "next/script";
 
 import Nav from "../../components/Nav/Nav";
 import Footer from "../../components/Footer/Footer";
@@ -25,7 +26,7 @@ export const metadata: Metadata = {
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
-  // Inline script: imposta tema prima del paint (niente flash)
+  // Inizializza il tema prima del paint
   const initTheme = `
   (function () {
     try {
@@ -44,26 +45,24 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       suppressHydrationWarning
       className={`${martian.variable} ${fraunces.variable}`}
     >
-      <head>
-        {/* Applica il tema PRIMA che la pagina venga renderizzata */}
-        <script dangerouslySetInnerHTML={{ __html: initTheme }} />
-      </head>
+      {/* Non è necessario definire <head>; Next lo gestisce con `metadata` o app/head.tsx */}
 
-      {/* Usa i token CSS definiti in global.css: background: var(--bg); color: var(--fg) */}
-      {/* Evita utility colore Tailwind qui per non sovrascrivere i token */}
-      <body>
-                <TopBar className="vt-static" />
+      <body suppressHydrationWarning>
+        {/* Inietta lo script tema PRIMA dell'interattività per evitare flash */}
+        <Script id="init-theme" strategy="beforeInteractive" dangerouslySetInnerHTML={{ __html: initTheme }} />
 
+        <TopBar className="vt-static" />
         {children}
         <Nav className="vt-static" />
         <Footer className="vt-static" />
-      </body>
 
-      {/* Overlay opzionale che già hai */}
-      <div
-        id="theme-overlay"
-        className="pointer-events-none fixed inset-0 opacity-0 transition-opacity duration-200"
-      />
+        {/* ✅ Overlay ora è DENTRO <body>, niente più hydration error */}
+        <div
+          id="theme-overlay"
+          className="pointer-events-none fixed inset-0 opacity-0 transition-opacity duration-200"
+          aria-hidden="true"
+        />
+      </body>
     </html>
   );
 }

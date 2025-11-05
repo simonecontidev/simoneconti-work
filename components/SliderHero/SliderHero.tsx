@@ -18,7 +18,6 @@ export default function SliderHero({
   titles,
   className,
   mode = "bleed",
-  
 }: SliderHeroProps) {
   const total = useMemo(() => Math.min(images.length, titles.length), [images, titles]);
   const [curr, setCurr] = useState(0);
@@ -50,14 +49,10 @@ export default function SliderHero({
     }
   }, []);
 
-  // First image
-  useEffect(() => {
-    if (!currentLayerRef.current) return;
-    const img = currentLayerRef.current.querySelector<HTMLImageElement>("img");
-    if (img && images[0]) img.src = images[0];
-  }, [images]);
+  // ✅ se non ci sono slide, non renderizziamo nulla
+  if (total === 0) return null;
 
-  // Measure dynamic line-heights (title/counter) and set CSS vars
+  // Misura line-heights dinamici (title/counter) e setta CSS vars
   useEffect(() => {
     const measure = () => {
       if (!rootRef.current) return;
@@ -87,8 +82,6 @@ export default function SliderHero({
     window.addEventListener("resize", onResize);
     return () => window.removeEventListener("resize", onResize);
   }, [titles, total]);
-
-  if (total === 0) return null;
 
   const DURATION = 1.2; // seconds
 
@@ -128,6 +121,7 @@ export default function SliderHero({
     if (total === 0) return;
     if (isAnimatingRef.current) return;
     if (target === curr) return;
+    if (!images[target]) return; // sicurezza
 
     const dir: "left" | "right" = target < curr ? "left" : "right";
     setPending(target);
@@ -135,9 +129,12 @@ export default function SliderHero({
 
     const currentLayer = currentLayerRef.current!;
     const nextLayer = nextLayerRef.current!;
-    const currentImg = currentLayer.querySelector("img") as HTMLImageElement;
-    const nextImg = nextLayer.querySelector("img") as HTMLImageElement;
+    const currentImg = currentLayer.querySelector("img") as HTMLImageElement | null;
+    const nextImg = nextLayer.querySelector("img") as HTMLImageElement | null;
 
+    if (!currentImg || !nextImg) return;
+
+    // prepara la prossima immagine
     nextImg.src = images[target];
 
     tlRef.current?.kill();
@@ -162,6 +159,7 @@ export default function SliderHero({
       .to(nextLayer, { clipPath: "polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%)", duration: DURATION }, 0)
       .to(nextImg, { x: 0, duration: DURATION }, 0)
       .add(() => {
+        // alla fine aggiorna il layer corrente con la nuova immagine
         currentImg.src = images[target];
         gsap.set([currentImg, nextImg, currentLayer, nextLayer], { clearProps: "all" });
         setCurr(target);
@@ -269,6 +267,9 @@ export default function SliderHero({
     };
   }, [curr, total]);
 
+  // ✅ inizializziamo i due <img> con una src valida per evitare warning
+  const firstSrc = images[0];
+
   return (
     <div
       ref={rootRef}
@@ -292,11 +293,11 @@ export default function SliderHero({
         <div className="sh-images">
           <div className="sh-img" ref={currentLayerRef}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="" alt="" />
+            <img src={firstSrc} alt="" />
           </div>
           <div className="sh-img" ref={nextLayerRef}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="" alt="" />
+            <img src={firstSrc} alt="" />
           </div>
         </div>
 
