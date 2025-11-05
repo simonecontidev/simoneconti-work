@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Copy from "../../../components/Copy/Copy";
 import Spotlight from "../../../components/Spotlight/Spotlight";
@@ -8,11 +8,12 @@ import CTACard from "../../../components/CTACard/CTACard";
 import { useGsapRegister } from "../../../src/lib/gsap";
 import SplitType from "split-type";
 import { cvItems } from "./cvItems";
+import styles from "./About.module.css";
 
 export default function AboutPage() {
   const { gsap, ScrollTrigger } = useGsapRegister();
 
-  // refs
+  // refs principali
   const containerRef = useRef<HTMLDivElement | null>(null);
   const portraitRef = useRef<HTMLDivElement | null>(null);
   const aboutCopyRef = useRef<HTMLDivElement | null>(null);
@@ -21,7 +22,16 @@ export default function AboutPage() {
   const cvHeaderRef = useRef<HTMLDivElement | null>(null);
   const cvListRef = useRef<HTMLDivElement | null>(null);
 
-  // ensure ST refresh on mount
+  // nuovi refs per anim pack
+  const headerRef = useRef<HTMLDivElement | null>(null);
+  const h1aRef = useRef<HTMLHeadingElement | null>(null);
+  const h1bRef = useRef<HTMLHeadingElement | null>(null);
+  const portraitWrapRef = useRef<HTMLDivElement | null>(null);
+
+  // stato per segmenti progress (per aria-current)
+  const [activeIndex, setActiveIndex] = useState(0);
+
+  // refresh iniziale
   useEffect(() => {
     const id = requestAnimationFrame(() => ScrollTrigger?.refresh(true));
     const onLoad = () => ScrollTrigger?.refresh(true);
@@ -32,7 +42,7 @@ export default function AboutPage() {
     };
   }, [ScrollTrigger]);
 
-  // animations: portrait clip, line reveals, CV, hero parallax
+  // blocco animazioni originali
   useEffect(() => {
     if (!containerRef.current) return;
 
@@ -50,7 +60,6 @@ export default function AboutPage() {
       });
     };
 
-    // portrait reveal
     if (portraitRef.current) {
       gsap.set(portraitRef.current, {
         clipPath: "polygon(0% 100%,100% 100%,100% 100%,0% 100%)",
@@ -63,10 +72,11 @@ export default function AboutPage() {
       });
     }
 
-    // intro text line reveal
     if (aboutCopyRef.current) {
       applySplit(aboutCopyRef.current);
-      const lines = aboutCopyRef.current.querySelectorAll<HTMLElement>(".line-wrapper span, .line-wrapper .line");
+      const lines = aboutCopyRef.current.querySelectorAll<HTMLElement>(
+        ".line-wrapper span, .line-wrapper .line"
+      );
       gsap.set(lines, { y: 30 });
       gsap.to(lines, {
         y: 0,
@@ -77,12 +87,15 @@ export default function AboutPage() {
       });
     }
 
-    // CV section reveals
     if (cvHeaderRef.current && cvListRef.current && cvWrapperRef.current) {
       applySplit(cvHeaderRef.current);
       applySplit(cvListRef.current);
-      const hdr = cvHeaderRef.current.querySelectorAll<HTMLElement>(".line-wrapper span, .line-wrapper .line");
-      const lst = cvListRef.current.querySelectorAll<HTMLElement>(".line-wrapper span, .line-wrapper .line");
+      const hdr = cvHeaderRef.current.querySelectorAll<HTMLElement>(
+        ".line-wrapper span, .line-wrapper .line"
+      );
+      const lst = cvListRef.current.querySelectorAll<HTMLElement>(
+        ".line-wrapper span, .line-wrapper .line"
+      );
       gsap.set([hdr, lst], { y: 70 });
       ScrollTrigger.create({
         trigger: cvWrapperRef.current,
@@ -94,7 +107,6 @@ export default function AboutPage() {
       });
     }
 
-    // hero parallax scale
     if (heroImgRef.current) {
       const img = heroImgRef.current.querySelector("img");
       if (img) {
@@ -110,7 +122,6 @@ export default function AboutPage() {
       }
     }
 
-    // cleanup
     return () => {
       ScrollTrigger.getAll().forEach((t) => t.kill());
       [aboutCopyRef, cvHeaderRef, cvListRef].forEach((r) => {
@@ -129,49 +140,268 @@ export default function AboutPage() {
     };
   }, [gsap, ScrollTrigger]);
 
+  // animation pack extra (titles split+shine, portrait tilt+parallax, copy parallax)
+  useEffect(() => {
+    if (!containerRef.current) return;
+    const elA = h1aRef.current;
+    const elB = h1bRef.current;
+
+    (async () => {
+      const gsapMod = await import("gsap");
+      const { ScrollTrigger } = await import("gsap/ScrollTrigger");
+      const gsap = gsapMod.gsap;
+      gsap.registerPlugin(ScrollTrigger);
+
+      const setupTitle = (el: HTMLElement | null, delay = 0) => {
+        if (!el) return;
+        const split = new SplitType(el, { types: "lines, words" });
+        (el as any).split = split;
+        const lines = split.lines as HTMLElement[];
+        gsap.set(lines, { yPercent: 100, opacity: 0, skewY: 8, transformOrigin: "left bottom" });
+        gsap.to(lines, {
+          yPercent: 0,
+          opacity: 1,
+          skewY: 0,
+          ease: "power4.out",
+          duration: 1.1,
+          stagger: 0.06,
+          delay,
+        });
+        gsap.fromTo(
+          el,
+          { "--shineX": "-30%" } as any,
+          { "--shineX": "130%", ease: "power2.out", duration: 1.8, delay: delay + 0.3 }
+        );
+      };
+      setupTitle(elA, 0.1);
+      setupTitle(elB, 0.2);
+
+      if (portraitWrapRef.current && portraitRef.current) {
+        const wrap = portraitWrapRef.current;
+        const card = portraitRef.current;
+
+        gsap.fromTo(
+          wrap,
+          { y: 40 },
+          {
+            y: -40,
+            ease: "none",
+            scrollTrigger: { trigger: wrap, start: "top bottom", end: "bottom top", scrub: true },
+          }
+        );
+
+        const tiltMax = Number(wrap.dataset.tilt ?? 8);
+        const moveMax = Number(wrap.dataset.translate ?? 14);
+        const onMove = (e: MouseEvent) => {
+          const rect = wrap.getBoundingClientRect();
+          const rx = (e.clientX - rect.left) / rect.width;
+          const ry = (e.clientY - rect.top) / rect.height;
+          const rotY = (rx - 0.5) * (tiltMax * 2);
+          const rotX = -(ry - 0.5) * (tiltMax * 1.2);
+          const tx = (rx - 0.5) * (moveMax * 2);
+          const ty = (ry - 0.5) * (moveMax * 2);
+          gsap.to(card, {
+            rotateX: rotX,
+            rotateY: rotY,
+            x: tx,
+            y: ty,
+            duration: 0.6,
+            ease: "power3.out",
+            transformPerspective: 800,
+            transformStyle: "preserve-3d",
+          });
+        };
+        const onLeave = () =>
+          gsap.to(card, { rotateX: 0, rotateY: 0, x: 0, y: 0, duration: 0.8, ease: "power3.out" });
+
+        wrap.addEventListener("mousemove", onMove);
+        wrap.addEventListener("mouseleave", onLeave);
+        ScrollTrigger.addEventListener("refreshInit", onLeave);
+
+        return () => {
+          wrap.removeEventListener("mousemove", onMove);
+          wrap.removeEventListener("mouseleave", onLeave);
+          ScrollTrigger.removeEventListener("refreshInit", onLeave);
+        };
+      }
+    })();
+
+    if (aboutCopyRef.current) {
+      (async () => {
+        const gsapMod = await import("gsap");
+        const { ScrollTrigger } = await import("gsap/ScrollTrigger");
+        const gsap = gsapMod.gsap;
+        gsap.registerPlugin(ScrollTrigger);
+
+        gsap.fromTo(
+          aboutCopyRef.current,
+          { y: 20 },
+          {
+            y: -20,
+            ease: "none",
+            scrollTrigger: {
+              trigger: aboutCopyRef.current!,
+              start: "top bottom",
+              end: "bottom top",
+              scrub: true,
+            },
+          }
+        );
+      })();
+    }
+  }, [gsap, ScrollTrigger]);
+
+  // --- PROGRESS BAR per sezioni ---
+  useEffect(() => {
+    if (!containerRef.current) return;
+
+    const prefersReduced =
+      typeof window !== "undefined" &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    const sections = Array.from(
+      containerRef.current.querySelectorAll<HTMLElement>(`.${styles.jsSection}`)
+    );
+
+    const segs = Array.from(
+      document.querySelectorAll<HTMLSpanElement>(`.${styles.segInner}`)
+    );
+    const items = Array.from(
+      document.querySelectorAll<HTMLLIElement>(`.${styles.segItem}`)
+    );
+
+    const triggers: ScrollTrigger[] = [];
+
+    sections.forEach((sec, i) => {
+      const st = ScrollTrigger.create({
+        trigger: sec,
+        start: "top 60%",
+        end: "bottom 40%",
+        onEnter: () => setActiveIndex(i),
+        onEnterBack: () => setActiveIndex(i),
+        onUpdate: (self) => {
+          if (prefersReduced) return;
+          const p = Math.max(0, Math.min(1, self.progress));
+          const seg = segs[i];
+          if (seg) seg.style.transform = `scaleY(${p})`;
+        },
+      });
+      triggers.push(st);
+    });
+
+    // reset al cambio tema (opzionale)
+    const onTheme = () => triggers.forEach((t) => t.refresh());
+    window.addEventListener("themechange" as any, onTheme);
+
+    return () => {
+      triggers.forEach((t) => t.kill());
+      window.removeEventListener("themechange" as any, onTheme);
+    };
+  }, []);
+
+  // elenco sezioni per la barra (id deve combaciare con markup)
+  const PROGRESS_SECTIONS = [
+    { id: "s-hero", title: "Intro" },
+    { id: "s-about", title: "Bio" },
+    { id: "s-heroimg", title: "Studio" },
+    { id: "s-cv", title: "CV" },
+  ];
+
+  const scrollToId = (id: string) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+
   return (
-    <div ref={containerRef} className="min-h-screen bg-black">
-      {/* Header (kept from your version) */}
-      <section className="mx-auto max-w-6xl px-6 py-24 md:py-32">
+    <div ref={containerRef} className={styles.root}>
+      {/* PROGRESS BAR FISSA */}
+      <nav className={styles.progress} aria-label="Section progress">
+        <ul className={styles.progressList} role="list">
+          {PROGRESS_SECTIONS.map((s, i) => (
+            <li
+              key={s.id}
+              className={`${styles.segItem} ${i === activeIndex ? styles.active : ""}`}
+              data-title={s.title}
+            >
+              <button
+                type="button"
+                aria-label={`Go to ${s.title}`}
+                aria-current={i === activeIndex ? "true" : undefined}
+                className={styles.segBtn}
+                onClick={() => scrollToId(s.id)}
+              >
+                <span className={styles.segTrack} />
+                <span className={styles.segInner} />
+              </button>
+            </li>
+          ))}
+        </ul>
+      </nav>
+
+      {/* Header */}
+      <section
+        id="s-hero"
+        data-title="Intro"
+        ref={headerRef}
+        className={`${styles.sectionPad} ${styles.jsSection}`}
+      >
         <div className="flex flex-col gap-4 md:gap-6">
           <Copy delay={0.8}>
-            <h1 className="text-right text-[10vw] leading-none font-semibold">
-              Hi
-            </h1>
+            <h1 ref={h1aRef} className={`${styles.h1} ${styles.shine} text-right`}>Hi</h1>
           </Copy>
           <Copy delay={0.95}>
-            <h1 className="text-right text-[10vw] leading-none font-semibold">
+            <h1 ref={h1bRef} className={`${styles.h1} ${styles.shine} text-right`}>
               Bridging code and emotion.
             </h1>
           </Copy>
         </div>
       </section>
 
-      {/* Intro image + bio (now animated) */}
-      <section className="mx-auto max-w-6xl px-6 pb-24 md:pb-40">
-        <div ref={portraitRef} className="mx-auto mb-12 w-1/3 overflow-hidden rounded-xl border border-white/10 bg-white/5 md:mb-16">
-          <Image
-            src="/about/portrait.jpg"
-            alt="Portrait"
-            width={1200}
-            height={1600}
-            className="h-full w-full object-cover"
-            priority
-          />
+      {/* Intro image + bio */}
+      <section
+        id="s-about"
+        data-title="Bio"
+        className={`${styles.sectionPad} ${styles.jsSection}`}
+      >
+        <div
+          ref={portraitWrapRef}
+          className={styles.parallaxWrap}
+          data-tilt="8"
+          data-translate="14"
+        >
+          <div
+            ref={portraitRef}
+            className={`${styles.card} ${styles.cardGlow} mx-auto mb-12 w-1/3 overflow-hidden md:mb-16`}
+          >
+            <Image
+              src="/about/portrait.jpg"
+              alt="Portrait"
+              width={1200}
+              height={1600}
+              className="h-full w-full object-cover"
+              priority
+            />
+          </div>
         </div>
 
         <div ref={aboutCopyRef}>
-          <h3 className="mx-auto mb-10 w-full text-left text-lg text-white/85 md:w-1/2 md:text-xl">
+          <h3 className={`${styles.muted} mx-auto mb-10 w-full text-left md:w-1/2 ${styles.h3}`}>
             Front-end developer and designer based in Barcelona. I build high-performance websites and interfaces using Next.js, React, GSAP, Tailwind, and TypeScript — with a focus on animation, storytelling, and refined UX.
           </h3>
-          <h3 className="mx-auto w-full text-left text-lg text-white/85 md:w-1/2 md:text-xl">
+          <h3 className={`${styles.muted} mx-auto w-full text-left md:w-1/2 ${styles.h3}`}>
             I collaborate with brands, artists, and studios to turn ideas into motion-driven products that are clean, fast, and accessible.
           </h3>
         </div>
       </section>
 
       {/* Parallax hero image */}
-      <section ref={heroImgRef} className="mx-auto my-24 max-w-6xl overflow-hidden rounded-2xl border border-white/10">
+      <section
+        id="s-heroimg"
+        data-title="Studio"
+        ref={heroImgRef}
+        className={`${styles.card} ${styles.jsSection} mx-auto my-24 overflow-hidden`}
+      >
         <Image
           src="/about/portrait.jpg"
           alt="Studio"
@@ -182,26 +412,31 @@ export default function AboutPage() {
       </section>
 
       {/* CV */}
-      <section ref={cvWrapperRef} className="mx-auto mb-32 max-w-5xl px-6">
+      <section
+        id="s-cv"
+        data-title="CV"
+        ref={cvWrapperRef}
+        className={`${styles.sectionPad} ${styles.jsSection} mx-auto`}
+      >
         <div ref={cvHeaderRef} className="mb-6">
-          <h2 className="text-2xl font-semibold md:text-3xl">CV</h2>
+          <h2 className={styles.h2}>CV</h2>
         </div>
 
-        <div ref={cvListRef} className="divide-y divide-white/10">
+        <div ref={cvListRef} className={styles.cvList}>
           {cvItems.map((item, i) => (
-            <div key={i} className="flex items-start justify-between gap-4 py-4">
+            <div key={i} className={styles.cvRow}>
               <div className="flex-1">
-                <h3 className="text-base md:text-lg">{item.name}</h3>
+                <h3 className={styles.h3}>{item.name}</h3>
               </div>
-              <div className="w-36 text-right text-white/60 md:w-40">
-                <h3 className="text-sm">{item.year}</h3>
+              <div className={`${styles.muted} w-36 text-right md:w-40`}>
+                <h3 className={styles.h4}>{item.year}</h3>
               </div>
             </div>
           ))}
         </div>
       </section>
 
-      {/* Spotlight rows + CTA (kept) */}
+      {/* Extra sections */}
       <Spotlight />
       <CTACard />
     </div>

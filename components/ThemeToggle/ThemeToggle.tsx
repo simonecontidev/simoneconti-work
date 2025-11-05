@@ -28,28 +28,44 @@ export default function ThemeToggle() {
     } catch {}
   };
 
-  useEffect(() => {
-    setMounted(true);
-    try {
-      const stored = localStorage.getItem('theme');
-      const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-      const activeDark = stored ? stored === 'dark' : systemPrefersDark;
-      setIsDark(activeDark);
-      applyTheme(activeDark);
+useEffect(() => {
+  setMounted(true);
+  try {
+    // Leggi lo stato "già applicato" da layout.tsx
+    const root = document.documentElement;
+    const currentIsDark = root.classList.contains('dark');
+    setIsDark(currentIsDark);
 
-      // opzionale: reagisci ai cambi di sistema
-      const mql = window.matchMedia('(prefers-color-scheme: dark)');
-      const onSystemChange = (e: MediaQueryListEvent) => {
-        // rispetta la scelta utente se già salvata
-        if (!localStorage.getItem('theme')) {
-          setIsDark(e.matches);
-          applyTheme(e.matches);
-        }
-      };
-      mql.addEventListener?.('change', onSystemChange);
-      return () => mql.removeEventListener?.('change', onSystemChange);
-    } catch {}
-  }, []);
+    // Reagisci ai cambi di sistema SOLO se l'utente non ha scelto nulla
+    const hasUserChoice = !!localStorage.getItem('theme');
+    const mql = window.matchMedia('(prefers-color-scheme: dark)');
+    const onSystemChange = (e: MediaQueryListEvent) => {
+      if (!hasUserChoice) {
+        setIsDark(e.matches);
+        applyTheme(e.matches);
+      }
+    };
+    // Safari compat
+    if (mql.addEventListener) mql.addEventListener('change', onSystemChange);
+    else mql.addListener(onSystemChange);
+
+    // Sync tra TAB diverse (se cambi su un'altra scheda)
+    const onStorage = (ev: StorageEvent) => {
+      if (ev.key === 'theme' && ev.newValue) {
+        const nextDark = ev.newValue === 'dark';
+        setIsDark(nextDark);
+        applyTheme(nextDark);
+      }
+    };
+    window.addEventListener('storage', onStorage);
+
+    return () => {
+      if (mql.removeEventListener) mql.removeEventListener('change', onSystemChange);
+      else mql.removeListener(onSystemChange);
+      window.removeEventListener('storage', onStorage);
+    };
+  } catch {}
+}, []);
 
   const toggle = () => {
     try {

@@ -1,0 +1,161 @@
+/* Theme-aware tokens */
+.root {
+  --cmp-surface: var(--surface);
+  --cmp-text: var(--text);
+  --cmp-muted: var(--muted);
+  --cmp-strong: var(--surface-strong);
+  --cmp-accent: var(--accent);
+
+  min-height: 100dvh;
+  background: var(--cmp-surface);
+  color: var(--cmp-text);
+  transition: background-color 0.4s ease, color 0.4s ease;
+}
+
+.sectionPad {
+  margin-inline: auto;
+  max-width: 72rem;
+  padding-inline: clamp(16px, 5vw, 64px);
+  padding-block: clamp(24px, 7vw, 96px);
+}
+
+.card {
+  border: 1px solid color-mix(in oklab, var(--cmp-text) 14%, transparent);
+  background: color-mix(in oklab, var(--cmp-text) 6%, transparent);
+  border-radius: 16px;
+  backdrop-filter: saturate(120%) blur(0.5px);
+  transition: background-color 0.3s ease, border-color 0.3s ease;
+}
+
+/* Titles */
+.h1 { font-size: clamp(40px, 10vw, 112px); line-height: 0.95; font-weight: 700; letter-spacing: -0.02em; }
+.h2 { font-size: clamp(22px, 3vw, 32px); font-weight: 600; letter-spacing: -0.01em; }
+.h3 { font-size: clamp(16px, 1.6vw, 20px); font-weight: 500; }
+.h4 { font-size: clamp(13px, 1.2vw, 15px); font-weight: 500; }
+.muted { color: color-mix(in oklab, var(--cmp-text) 80%, transparent); }
+
+/* CV list */
+.cvList { margin-top: 8px; }
+.cvRow {
+  display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; padding-block: 1rem;
+  border-top: 1px solid color-mix(in oklab, var(--cmp-text) 12%, transparent);
+}
+.cvRow:first-child { border-top: 0; }
+
+/* Shine gradient on titles */
+.shine {
+  color: transparent;
+  background: linear-gradient(
+    90deg,
+    color-mix(in oklab, var(--cmp-text) 82%, transparent) 0%,
+    var(--cmp-text) 18%,
+    var(--cmp-text) 50%,
+    color-mix(in oklab, var(--cmp-text) 82%, transparent) 82%
+  );
+  background-clip: text; -webkit-background-clip: text;
+  background-size: 220% 100%;
+  background-position: var(--shineX, 0%) 0%;
+  will-change: background-position;
+}
+
+/* Portrait tilt/parallax */
+.parallaxWrap { perspective: 900px; transform-style: preserve-3d; will-change: transform; }
+.cardGlow {
+  box-shadow: 0 8px 28px color-mix(in oklab, var(--cmp-text) 10%, transparent),
+              0 1px 0 color-mix(in oklab, var(--cmp-text) 12%, transparent) inset;
+  transition: box-shadow 0.3s ease;
+}
+.cardGlow:hover {
+  box-shadow: 0 14px 48px color-mix(in oklab, var(--cmp-text) 14%, transparent),
+              0 1px 0 color-mix(in oklab, var(--cmp-text) 16%, transparent) inset;
+}
+
+/* Copy helpers */
+.copyBlock .line { display: inline-block; will-change: transform, clip-path; }
+
+/* ---- PROGRESS BAR FISSA (segmentata) ---- */
+.progress {
+  position: fixed;
+  inset-block-start: 15vh;                  /* distanza dall'alto */
+  inset-inline-end: clamp(8px, 2vw, 24px);  /* distanza dal bordo destro */
+  height: 70vh;
+  width: 12px;
+  display: flex;
+  align-items: center;
+  z-index: 40;
+  pointer-events: none; /* sblocco pointer solo sui bottoni */
+}
+
+.progressList {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  height: 100%;
+  width: 100%;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.segItem {
+  position: relative;
+  flex: 1 1 auto;
+  border-radius: 999px;
+}
+.segItem::after {
+  content: attr(data-title);
+  position: absolute;
+  right: 110%;
+  top: 50%;
+  transform: translateY(-50%) translateX(8px);
+  white-space: nowrap;
+  font-size: 12px;
+  color: color-mix(in oklab, var(--cmp-text) 70%, transparent);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease, transform 0.25s ease;
+}
+.segItem:hover::after { opacity: 1; transform: translateY(-50%) translateX(0); }
+
+.segBtn {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  background: none;
+  padding: 0;
+  cursor: pointer;
+  pointer-events: auto; /* abilita click */
+  border-radius: 999px;
+  outline: none;
+}
+.segBtn:focus-visible { box-shadow: 0 0 0 2px var(--cmp-accent); }
+
+.segTrack {
+  position: absolute; inset: 0;
+  background: color-mix(in oklab, var(--cmp-text) 15%, transparent);
+  border-radius: 999px;
+}
+.segInner {
+  position: absolute; inset: 0;
+  transform-origin: top;
+  transform: scaleY(0);
+  background: color-mix(in oklab, var(--cmp-text) 85%, transparent);
+  border-radius: 999px;
+  transition: background-color 0.25s ease;
+}
+
+/* segmento attivo (bordino luminoso) */
+.active .segTrack {
+  box-shadow: 0 0 0 1px color-mix(in oklab, var(--cmp-text) 26%, transparent) inset;
+}
+
+/* Sezioni scroll-tracciate */
+.jsSection { /* marker class, no styles needed */ }
+
+/* Responsive: nascondi barra su mobile molto stretto (se vuoi) */
+@media (max-width: 540px) {
+  .progress { inset-inline-end: 6px; height: 60vh; width: 10px; }
+  .segItem::after { display: none; }
+}

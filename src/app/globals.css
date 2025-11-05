@@ -3,10 +3,10 @@
 /* ---------------------------
    Color tokens (light / dark)
 ---------------------------- */
+/* LIGHT */
 :root {
-  /* canonici */
-  --surface: #ffffff;      /* background chiaro */
-  --text:    #111111;      /* testo chiaro */
+  --surface: #ffffff;
+  --text:    #111111;
   --surface-strong: #0b0b0b;
   --text-on-strong: #f5f5f5;
   --muted:  #9E9E9E;
@@ -14,22 +14,36 @@
   --accent: #6DA9E4;
   color-scheme: light;
 
-  /* alias (retro-compat col resto del sito) */
   --bg: var(--surface);
   --fg: var(--text);
 }
 
-html[data-theme="dark"] {
-  /* canonici */
-  --surface: #0b0b0b;      /* background scuro */
-  --text:    #f5f5f5;      /* testo scuro */
+/* DARK – vale per entrambi i metodi */
+html[data-theme="dark"],
+html.dark {
+  --surface: #0b0b0b;
+  --text:    #f5f5f5;
   --surface-strong: #111111;
   --text-on-strong: #eaeaea;
   color-scheme: dark;
 
-  /* alias */
   --bg: var(--surface);
   --fg: var(--text);
+}
+
+/* Tailwind v4 tokens (facoltativi ma consigliati) */
+@theme {
+  --color-background: #FAFAFA;
+  --color-surface:    #F5F5F5;
+  --color-dark:       #111111;
+
+  --color-gray-100: #F5F5F5;
+  --color-gray-200: #E5E5E5;
+  --color-gray-400: #9E9E9E;
+  --color-gray-600: #666666;
+  --color-gray-800: #222222;
+
+  --color-accent: #6DA9E4;
 }
 
 /* Classe .dark (Tailwind) – resta come fallback/compat, ma i token prendono da data-theme */
