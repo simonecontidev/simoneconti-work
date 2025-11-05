@@ -2,7 +2,7 @@
 import WonJYou from "../../components/sections/HorizontalShowcase/HorizontalShowcase";
 
 import ScrollShowcase from "../../components/sections/ScrollShowcase/ScrollShowcase";
-import CamilleMormalSlider from "../../components/CamilleMormalSlider/CamilleMormalSlider";
+import SliderHero from "../../components/SliderHero/SliderHero";
 
 import ScrollImageReveal from "../../components/ScrollImageReveal/ScrollImageReveal";
 import HomeTextRevealSection from "../../components/HomeTextRevealSection/HomeTextRevealSection";
@@ -22,7 +22,7 @@ export default function Home() {
   return (
     <main className="min-h-dvh grid place-items-center bg-black text-zinc-100">
 
-    <CamilleMormalSlider
+    <SliderHero
     mode="bleed"
         images={[
           "/assets/img1.jpg",
@@ -38,6 +38,8 @@ export default function Home() {
           "Job App",
           "Taskflow",
         ]}
+        
+        
       />
 
 

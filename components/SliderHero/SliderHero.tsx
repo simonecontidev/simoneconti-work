@@ -4,20 +4,22 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import { gsap } from "gsap";
 import { CustomEase } from "gsap/CustomEase";
 
-export type CamilleMormalSliderProps = {
+export type SliderHeroProps = {
   images: string[];
   titles: string[];
   className?: string;
-  /** "contained" = componente centrato in pagina; "bleed" = full-bleed */
   mode?: "contained" | "bleed";
+  captions?: string[][];
+  smallTexts?: (string | null)[];
 };
 
-export default function CamilleMormalSlider({
+export default function SliderHero({
   images,
   titles,
   className,
   mode = "bleed",
-}: CamilleMormalSliderProps) {
+  
+}: SliderHeroProps) {
   const total = useMemo(() => Math.min(images.length, titles.length), [images, titles]);
   const [curr, setCurr] = useState(0);
   const [pending, setPending] = useState<number | null>(null);
@@ -59,8 +61,8 @@ export default function CamilleMormalSlider({
   useEffect(() => {
     const measure = () => {
       if (!rootRef.current) return;
-      const titleWrap = rootRef.current.querySelector(".slider-title-wrapper") as HTMLElement | null;
-      const counterWrap = rootRef.current.querySelector(".counter") as HTMLElement | null;
+      const titleWrap = rootRef.current.querySelector(".sh-title-wrapper") as HTMLElement | null;
+      const counterWrap = rootRef.current.querySelector(".sh-counter-inner") as HTMLElement | null;
 
       const titleFirst = titleWrap?.querySelector("p") as HTMLElement | null;
       const counterFirst = counterWrap?.querySelector("p") as HTMLElement | null;
@@ -93,8 +95,8 @@ export default function CamilleMormalSlider({
   // ---- UI shifts (counter & titles) + title active fx ----
   const updateUI = (idx: number) => {
     if (!rootRef.current) return;
-    const counter = rootRef.current.querySelector(".counter") as HTMLElement;
-    const titlesWrap = rootRef.current.querySelector(".slider-title-wrapper") as HTMLElement;
+    const counter = rootRef.current.querySelector(".sh-counter-inner") as HTMLElement;
+    const titlesWrap = rootRef.current.querySelector(".sh-title-wrapper") as HTMLElement;
     const titleEls = Array.from(titlesWrap.querySelectorAll("p"));
 
     const counterStep = counterLHRef.current || 20;
@@ -116,7 +118,7 @@ export default function CamilleMormalSlider({
 
   const rotateIndicators = (dir: "left" | "right") => {
     if (!rootRef.current) return;
-    const indicators = rootRef.current.querySelectorAll(".slider-indicators p");
+    const indicators = rootRef.current.querySelectorAll(".sh-indicators p");
     indicatorRotation.current += dir === "left" ? -90 : 90;
     gsap.killTweensOf(indicators);
     gsap.to(indicators, { rotate: indicatorRotation.current, duration: DURATION * 0.6, ease: "hop" });
@@ -179,9 +181,9 @@ export default function CamilleMormalSlider({
     const el = rootRef.current;
 
     const onClick = (e: MouseEvent) => {
-      const preview = el.querySelector(".slider-preview") as HTMLElement;
-      const indicators = el.querySelector(".slider-indicators") as HTMLElement;
-      const slider = el.querySelector(".slider") as HTMLElement;
+      const preview = el.querySelector(".sh-preview") as HTMLElement;
+      const indicators = el.querySelector(".sh-indicators") as HTMLElement;
+      const slider = el.querySelector(".sh-slider") as HTMLElement;
 
       // indicators: left (-), right (+)
       if (indicators && indicators.contains(e.target as Node)) {
@@ -197,8 +199,8 @@ export default function CamilleMormalSlider({
 
       // thumbnails
       if (preview && preview.contains(e.target as Node)) {
-        const thumbs = Array.from(preview.querySelectorAll(".preview"));
-        const hit = (e.target as HTMLElement).closest(".preview");
+        const thumbs = Array.from(preview.querySelectorAll(".sh-preview-item"));
+        const hit = (e.target as HTMLElement).closest(".sh-preview-item");
         if (hit) {
           const idx = thumbs.indexOf(hit as HTMLElement);
           if (idx >= 0) navTo(idx);
@@ -230,7 +232,7 @@ export default function CamilleMormalSlider({
   // ---- Swipe / Drag (pointer) ----
   useEffect(() => {
     if (!rootRef.current) return;
-    const slider = rootRef.current.querySelector(".slider") as HTMLElement;
+    const slider = rootRef.current.querySelector(".sh-slider") as HTMLElement;
     if (!slider) return;
 
     const onDown = (e: PointerEvent) => {
@@ -271,13 +273,14 @@ export default function CamilleMormalSlider({
     <div
       ref={rootRef}
       className={[
-        "cm-camille",
-        mode === "contained" ? "cm--contained" : "cm--bleed",
+        "sh-hero",
+        mode === "contained" ? "sh--contained" : "sh--bleed",
         className,
       ]
         .filter(Boolean)
         .join(" ")}
     >
+      {/* opzionale: font per i testi del componente */}
       <link rel="preconnect" href="https://fonts.googleapis.com" />
       <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
       <link
@@ -285,21 +288,21 @@ export default function CamilleMormalSlider({
         rel="stylesheet"
       />
 
-      <div className="slider">
-        <div className="slider-images">
-          <div className="img" ref={currentLayerRef}>
+      <div className="sh-slider">
+        <div className="sh-images">
+          <div className="sh-img" ref={currentLayerRef}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src="" alt="" />
           </div>
-          <div className="img" ref={nextLayerRef}>
+          <div className="sh-img" ref={nextLayerRef}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src="" alt="" />
           </div>
         </div>
 
         {/* Title */}
-        <div className="slider-title">
-          <div className="slider-title-wrapper">
+        <div className="sh-title">
+          <div className="sh-title-wrapper">
             {titles.slice(0, total).map((t, i) => (
               <p key={i}>{t}</p>
             ))}
@@ -307,8 +310,8 @@ export default function CamilleMormalSlider({
         </div>
 
         {/* Counter (left) */}
-        <div className="slider-counter">
-          <div className="counter">
+        <div className="sh-counter">
+          <div className="sh-counter-inner">
             {Array.from({ length: total }).map((_, i) => (
               <p key={i}>{i + 1}</p>
             ))}
@@ -316,9 +319,9 @@ export default function CamilleMormalSlider({
         </div>
 
         {/* Thumbs */}
-        <div className="slider-preview">
+        <div className="sh-preview">
           {images.slice(0, total).map((src, i) => (
-            <div key={i} className={"preview" + (i === (pending ?? curr) ? " active" : "")}>
+            <div key={i} className={"sh-preview-item" + (i === (pending ?? curr) ? " active" : "")}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={src} alt="" />
             </div>
@@ -326,19 +329,19 @@ export default function CamilleMormalSlider({
         </div>
 
         {/* Indicators (- / +) */}
-        <div className="slider-indicators">
+        <div className="sh-indicators">
           <p>-</p>
           <p>+</p>
         </div>
       </div>
 
       <style jsx>{`
-        .cm-camille * {
+        .sh-hero * {
           box-sizing: border-box;
           -webkit-user-select: none;
           user-select: none;
         }
-        .cm-camille {
+        .sh-hero {
           background: #0c0c0c;
           color: #fff;
           font-family: Inter, system-ui, sans-serif;
@@ -347,7 +350,7 @@ export default function CamilleMormalSlider({
         }
 
         /* MODALITÀ LAYOUT */
-        .cm--bleed {
+        .sh--bleed {
           width: 100vw;
           position: relative;
           left: 0%;
@@ -355,12 +358,12 @@ export default function CamilleMormalSlider({
           margin-left: -50vw;
           margin-right: -50vw;
         }
-        .cm--contained {
+        .sh--contained {
           width: min(1200px, 92vw);
           margin-inline: auto;
         }
 
-        .slider {
+        .sh-slider {
           position: relative;
           width: 100%;
           height: 100dvh;
@@ -370,187 +373,110 @@ export default function CamilleMormalSlider({
           overflow: hidden;
           padding-bottom: env(safe-area-inset-bottom);
         }
-        .slider-images {
-          position: absolute;
-          inset: 0;
-        }
-        .img {
-          position: absolute;
-          inset: 0;
-          overflow: hidden;
-        }
-        .img img {
-          width: 100%;
-          height: 100%;
-          object-fit: cover;
-          display: block;
+        .sh-images { position: absolute; inset: 0; }
+        .sh-img { position: absolute; inset: 0; overflow: hidden; }
+        .sh-img img {
+          width: 100%; height: 100%; object-fit: cover; display: block;
         }
 
         /* Title (uses measured line-height) */
-        .slider-title {
+        .sh-title {
           position: absolute;
-          top: 50%;
-          left: 50%;
+          top: 50%; left: 50%;
           transform: translate(-50%, -50%);
           height: var(--titleLH, 60px);
-          overflow: hidden;
-          z-index: 4;
-          text-align: center;
-          width: 100%;
-          padding: 0 2vw;
+          overflow: hidden; z-index: 4; text-align: center;
+          width: 100%; padding: 0 2vw;
         }
-        .slider-title-wrapper {
-          display: grid;
-          gap: 0;
-          justify-items: center;
-        }
-        .slider-title-wrapper p {
+        .sh-title-wrapper { display: grid; gap: 0; justify-items: center; }
+        .sh-title-wrapper p {
           font-size: clamp(22px, 6vw, 48px);
           line-height: clamp(32px, 7.5vw, 60px);
-          letter-spacing: 0.01em;
-          margin: 0;
+          letter-spacing: 0.01em; margin: 0;
         }
 
         /* Counter left (uses measured line-height) */
-        .slider-counter {
-          position: absolute;
-          left: 5vw;
-          top: 50%;
+        .sh-counter {
+          position: absolute; left: 5vw; top: 50%;
           transform: translateY(-50%);
           height: var(--counterLH, 20px);
-          overflow: hidden;
-          z-index: 4;
+          overflow: hidden; z-index: 4;
         }
-        .counter {
-          display: grid;
-          gap: 0;
-        }
-        .counter p {
+        .sh-counter-inner { display: grid; gap: 0; }
+        .sh-counter-inner p {
           font-size: clamp(12px, 1.8vw, 16px);
           line-height: var(--counterLH, 20px);
-          opacity: 0.9;
-          margin: 0;
+          opacity: 0.9; margin: 0;
         }
 
         /* Indicators & Thumbs base */
-        .slider-indicators,
-        .slider-preview {
-          position: absolute;
-          left: 50%;
+        .sh-indicators, .sh-preview {
+          position: absolute; left: 50%;
           transform: translateX(-50%);
-          z-index: 5;
-          pointer-events: auto;
+          z-index: 5; pointer-events: auto;
         }
 
-        .slider-indicators {
+        .sh-indicators {
           bottom: max(2.5em, env(safe-area-inset-bottom));
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          gap: 24px;
-          padding: 0 2vw;
+          display: flex; justify-content: space-between; align-items: center;
+          gap: 24px; padding: 0 2vw;
         }
-        .slider-indicators p {
+        .sh-indicators p {
           font-size: clamp(24px, 4.5vw, 32px);
-          cursor: pointer;
-          opacity: 0.9;
-          transition: opacity 0.25s ease;
-          user-select: none;
-          margin: 0;
+          cursor: pointer; opacity: 0.9;
+          transition: opacity 0.25s ease; user-select: none; margin: 0;
         }
-        .slider-indicators p:hover {
-          opacity: 1;
-        }
+        .sh-indicators p:hover { opacity: 1; }
 
-        .slider-preview {
-          bottom: calc(max(6em, 56px) + env(safe-area-inset-bottom));
-          display: grid;
-          grid-template-columns: repeat(${total}, 1fr);
+        .sh-preview {
+          bottom: calc(max(8em, 46px) + env(safe-area-inset-bottom));
+          display: grid; grid-template-columns: repeat(${total}, 1fr);
           gap: 8px;
         }
-        .preview {
-          aspect-ratio: 16 / 10;
-          position: relative;
-          overflow: hidden;
-          border-radius: 6px;
-          outline: 1px solid rgba(255, 255, 255, 0.25);
-          opacity: 0.75;
-          transition: opacity 0.25s ease, outline-color 0.25s ease;
+        .sh-preview-item {
+          aspect-ratio: 16 / 10; position: relative; overflow: hidden;
+          border-radius: 6px; outline: 1px solid rgba(255,255,255,0.25);
+          opacity: 0.75; transition: opacity 0.25s ease, outline-color 0.25s ease;
           cursor: pointer;
         }
-        .preview img {
-          width: 100%;
-          height: 100%;
-          object-fit: cover;
-          display: block;
-        }
-        .preview.active {
-          opacity: 1;
-          outline-color: rgba(255, 255, 255, 0.9);
-        }
+        .sh-preview-item img { width: 100%; height: 100%; object-fit: cover; display: block; }
+        .sh-preview-item.active { opacity: 1; outline-color: rgba(255,255,255,0.9); }
 
         /* Overlay centrati quando in modalità BLEED */
-        .cm--bleed .slider-title,
-        .cm--bleed .slider-preview,
-        .cm--bleed .slider-indicators {
+        .sh--bleed .sh-title,
+        .sh--bleed .sh-preview,
+        .sh--bleed .sh-indicators {
           width: min(1200px, 92vw);
-          margin-left: auto;
-          margin-right: auto;
+          margin-left: auto; margin-right: auto;
         }
 
         /* breakpoints */
-        @media (max-width: 1200px) {
-          .slider-indicators {
-            gap: 18px;
-          }
-        }
+        @media (max-width: 1200px) { .sh-indicators { gap: 18px; } }
         @media (max-width: 900px) {
-          .slider-preview {
-            grid-template-columns: repeat(${Math.max(3, Math.min(total, 5))}, 1fr);
-          }
+          .sh-preview { grid-template-columns: repeat(${Math.max(3, Math.min(total, 5))}, 1fr); }
         }
         @media (max-width: 560px) {
-          .slider-title {
-            height: var(--titleLH, 48px);
-            width: 92vw; /* più stretto su mobile */
-          }
-          .slider-counter {
-            left: 4vw;
-          }
+          .sh-title { height: var(--titleLH, 48px); width: 92vw; }
+          .sh-counter { left: 4vw; }
 
           /* thumbs in carosello orizzontale */
-          .slider-preview {
+          .sh-preview {
             width: 92vw;
-            grid-auto-flow: column;
-            grid-auto-columns: 48%;
+            grid-auto-flow: column; grid-auto-columns: 48%;
             grid-template-columns: unset;
-            overflow-x: auto;
-            overscroll-behavior-x: contain;
-            -webkit-overflow-scrolling: touch;
-            scroll-snap-type: x mandatory;
-            gap: 8px;
-            padding: 0 2px;
-            scrollbar-width: none;
+            overflow-x: auto; overscroll-behavior-x: contain;
+            -webkit-overflow-scrolling: touch; scroll-snap-type: x mandatory;
+            gap: 8px; padding: 0 2px; scrollbar-width: none;
           }
-          .slider-preview::-webkit-scrollbar {
-            display: none;
-          }
-          .preview {
-            scroll-snap-align: center;
-            aspect-ratio: 16 / 10;
-            border-radius: 8px;
-            outline-width: 1px;
-            opacity: 0.8;
+          .sh-preview::-webkit-scrollbar { display: none; }
+          .sh-preview-item {
+            scroll-snap-align: center; aspect-ratio: 16 / 10;
+            border-radius: 8px; outline-width: 1px; opacity: 0.8;
           }
         }
         @media (max-width: 380px) {
-          .slider-preview {
-            grid-auto-columns: 42%;
-            gap: 6px;
-          }
-          .preview {
-            aspect-ratio: 16 / 11;
-          }
+          .sh-preview { grid-auto-columns: 42%; gap: 6px; }
+          .sh-preview-item { aspect-ratio: 16 / 11; }
         }
       `}</style>
     </div>
