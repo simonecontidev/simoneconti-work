@@ -1,7 +1,7 @@
 // app/layout.tsx
 import "./globals.css";
 import type { Metadata } from "next";
-import { Martian_Mono, Fraunces } from "next/font/google";
+import { Martian_Mono, Inter } from "next/font/google";
 import Script from "next/script";
 
 import Footer from "../../components/Footer/Footer";
@@ -16,11 +16,12 @@ const martian = Martian_Mono({
   display: "swap",
 });
 
-const fraunces = Fraunces({
+const inter = Inter({
   subsets: ["latin"],
-  variable: "--font-fraunces",
+  variable: "--font-inter",
   display: "swap",
 });
+
 
 export const metadata: Metadata = {
   title: "Simone Conti — Creative Front-End Developer",
@@ -45,11 +46,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html
       lang="en"
       suppressHydrationWarning
-      className={`${martian.variable} ${fraunces.variable}`}
+      className={`${martian.variable} ${inter.variable}`}
     >
       {/* Non è necessario definire <head>; Next lo gestisce con `metadata` o app/head.tsx */}
 
-      <body suppressHydrationWarning>
+      <body suppressHydrationWarning >
         {/* Inietta lo script tema PRIMA dell'interattività per evitare flash */}
         <Script id="init-theme" strategy="beforeInteractive" dangerouslySetInnerHTML={{ __html: initTheme }} />
 

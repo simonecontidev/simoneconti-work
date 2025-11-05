@@ -60,7 +60,7 @@ html.dark {
 ---------------------------- */
 :root {
   --font-martian: 'Martian Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-  --font-fraunces: 'Fraunces', ui-serif, Georgia, serif;
+  --font-inter: 'Inter', ui-serif, Georgia, serif;
 }
 
 html, body {
@@ -70,7 +70,7 @@ html, body {
 body {
   background: var(--bg);
   color: var(--fg);
-  font-family: var(--font-fraunces);
+  font-family: var(--font-inter);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   transition: background-color 0.4s ease, color 0.4s ease;
@@ -132,3 +132,10 @@ html { view-transition-name: root; }
 
 /* escludi header/footer/overlay dalla snapshot */
 .vt-static { view-transition-name: none; }
+
+/* styles/global.css o TopBar.module.css */
+.topbar-title {
+  color: white;
+  mix-blend-mode: difference;
+  transition: color 0.3s ease;
+}
