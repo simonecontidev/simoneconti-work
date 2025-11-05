@@ -4,17 +4,38 @@
    Color tokens (light / dark)
 ---------------------------- */
 :root {
-  --bg: #FAFAFA;   /* background chiaro */
-  --fg: #111111;   /* testo */
-  --muted: #9E9E9E;
-  --card: #F5F5F5;
+  /* canonici */
+  --surface: #ffffff;      /* background chiaro */
+  --text:    #111111;      /* testo chiaro */
+  --surface-strong: #0b0b0b;
+  --text-on-strong: #f5f5f5;
+  --muted:  #9E9E9E;
+  --card:   #F5F5F5;
   --accent: #6DA9E4;
   color-scheme: light;
+
+  /* alias (retro-compat col resto del sito) */
+  --bg: var(--surface);
+  --fg: var(--text);
 }
 
+html[data-theme="dark"] {
+  /* canonici */
+  --surface: #0b0b0b;      /* background scuro */
+  --text:    #f5f5f5;      /* testo scuro */
+  --surface-strong: #111111;
+  --text-on-strong: #eaeaea;
+  color-scheme: dark;
+
+  /* alias */
+  --bg: var(--surface);
+  --fg: var(--text);
+}
+
+/* Classe .dark (Tailwind) – resta come fallback/compat, ma i token prendono da data-theme */
 .dark {
-  --bg: #0B0B0B;   /* background scuro */
-  --fg: #FAFAFA;   /* testo */
+  --bg: #0B0B0B;
+  --fg: #FAFAFA;
   --muted: #9E9E9E;
   --card: #121212;
   --accent: #8BBCFF;

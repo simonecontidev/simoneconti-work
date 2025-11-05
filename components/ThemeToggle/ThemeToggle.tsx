@@ -9,32 +9,60 @@ export default function ThemeToggle() {
   const [mounted, setMounted] = useState(false);
   const [isDark, setIsDark] = useState(false);
 
+  // helper
+  const applyTheme = (dark: boolean) => {
+    const root = document.documentElement;
+    // Tailwind dark mode
+    root.classList.toggle('dark', dark);
+    // CSS custom properties (HorizontalShowcase & co.)
+    root.setAttribute('data-theme', dark ? 'dark' : 'light');
+    // salva preferenza
+    localStorage.setItem('theme', dark ? 'dark' : 'light');
+    // Notifica eventuali listener
+    window.dispatchEvent(new CustomEvent('themechange', { detail: { dark } }));
+    // Se c'è GSAP ScrollTrigger, rinfresca i calcoli
+    try {
+      // @ts-ignore
+      const ST = window?.ScrollTrigger;
+      if (ST?.refresh) ST.refresh();
+    } catch {}
+  };
+
   useEffect(() => {
     setMounted(true);
     try {
-      const root = document.documentElement;
       const stored = localStorage.getItem('theme');
       const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
       const activeDark = stored ? stored === 'dark' : systemPrefersDark;
       setIsDark(activeDark);
-      root.classList.toggle('dark', activeDark);
+      applyTheme(activeDark);
+
+      // opzionale: reagisci ai cambi di sistema
+      const mql = window.matchMedia('(prefers-color-scheme: dark)');
+      const onSystemChange = (e: MediaQueryListEvent) => {
+        // rispetta la scelta utente se già salvata
+        if (!localStorage.getItem('theme')) {
+          setIsDark(e.matches);
+          applyTheme(e.matches);
+        }
+      };
+      mql.addEventListener?.('change', onSystemChange);
+      return () => mql.removeEventListener?.('change', onSystemChange);
     } catch {}
   }, []);
 
-const toggle = () => {
-  try {
-    const root = document.documentElement;
-    const overlay = document.getElementById('theme-overlay');
-    if (overlay) overlay.style.opacity = '0.3'; // breve flash morbido
+  const toggle = () => {
+    try {
+      const overlay = document.getElementById('theme-overlay');
+      if (overlay) overlay.style.opacity = '0.3'; // breve flash morbido
 
-    const next = !isDark;
-    setIsDark(next);
-    root.classList.toggle('dark', next);
-    localStorage.setItem('theme', next ? 'dark' : 'light');
+      const next = !isDark;
+      setIsDark(next);
+      applyTheme(next);
 
-    if (overlay) setTimeout(() => (overlay.style.opacity = '0'), 200);
-  } catch {}
-};
+      if (overlay) setTimeout(() => (overlay.style.opacity = '0'), 200);
+    } catch {}
+  };
 
   if (!mounted) return null;
 
@@ -55,7 +83,6 @@ const toggle = () => {
     >
       <AnimatePresence mode="wait" initial={false}>
         {isDark ? (
-          // Dark mode attiva → mostra SOLE per passare a light
           <motion.span
             key="sun"
             initial={{ opacity: 0, rotate: -90, scale: 0.5 }}
@@ -68,7 +95,6 @@ const toggle = () => {
             <LightModeRoundedIcon fontSize="small" />
           </motion.span>
         ) : (
-          // Light mode attiva → mostra LUNA per passare a dark
           <motion.span
             key="moon"
             initial={{ opacity: 0, rotate: 90, scale: 0.5 }}
