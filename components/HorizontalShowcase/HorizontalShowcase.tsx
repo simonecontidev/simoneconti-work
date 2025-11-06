@@ -1,4 +1,3 @@
-// src/components/sections/HorizontalShowcase/WonJYou.tsx
 "use client";
 
 import { useLayoutEffect, useMemo, useRef } from "react";

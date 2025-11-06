@@ -1,6 +1,6 @@
 // app/page.tsx (o app/portfolio/page.tsx)
 "use client";
-import HorizontalShowcase from "../../components/sections/HorizontalShowcase/HorizontalShowcase";
+import HorizontalShowcase from "../../components//HorizontalShowcase/HorizontalShowcase";
 import ScrollShowcase from "../../components/sections/ScrollShowcase/ScrollShowcase";
 import SliderHero from "../../components/SliderHero/SliderHero";
 import ScrollImageReveal from "../../components/ScrollImageReveal/ScrollImageReveal";
