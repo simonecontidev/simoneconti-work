@@ -14,7 +14,7 @@ import styles from "./About.module.css";
 export default function AboutPage() {
   const { gsap, ScrollTrigger } = useGsapRegister();
 
-  // refs principali
+  // refs
   const containerRef = useRef<HTMLDivElement | null>(null);
   const portraitRef = useRef<HTMLDivElement | null>(null);
   const aboutCopyRef = useRef<HTMLDivElement | null>(null);
@@ -22,14 +22,11 @@ export default function AboutPage() {
   const cvWrapperRef = useRef<HTMLDivElement | null>(null);
   const cvHeaderRef = useRef<HTMLDivElement | null>(null);
   const cvListRef = useRef<HTMLDivElement | null>(null);
-
-  // refs extra
   const headerRef = useRef<HTMLDivElement | null>(null);
   const h1aRef = useRef<HTMLHeadingElement | null>(null);
   const h1bRef = useRef<HTMLHeadingElement | null>(null);
   const portraitWrapRef = useRef<HTMLDivElement | null>(null);
 
-  // refresh iniziale
   useEffect(() => {
     const id = requestAnimationFrame(() => ScrollTrigger?.refresh(true));
     const onLoad = () => ScrollTrigger?.refresh(true);
@@ -40,7 +37,6 @@ export default function AboutPage() {
     };
   }, [ScrollTrigger]);
 
-  // animazioni base
   useEffect(() => {
     if (!containerRef.current) return;
 
@@ -139,7 +135,7 @@ export default function AboutPage() {
     };
   }, [gsap, ScrollTrigger]);
 
-  // pack extra
+  // motion tilt + parallax
   useEffect(() => {
     if (!containerRef.current) return;
     const elA = h1aRef.current;
@@ -251,20 +247,19 @@ export default function AboutPage() {
   }, [gsap, ScrollTrigger]);
 
   return (
-    <div
-      ref={containerRef}
-      className={`${styles.root} bg-[var(--bg)] text-[var(--fg)]`}
-    >
+    <div ref={containerRef} className={`${styles.root} bg-[var(--bg)] text-[var(--fg)]`}>
       {/* Header */}
       <section
-  id="s-hero"
-  data-title="Intro"
-  ref={headerRef}
-  className={`${styles.sectionPad} ${styles.jsSection} relative z-10`}
->
+        id="s-hero"
+        data-title="Intro"
+        ref={headerRef}
+        className={`${styles.sectionPad} ${styles.jsSection} relative z-10`}
+      >
         <div className="flex flex-col gap-4 md:gap-6">
           <Copy delay={0.8}>
-            <h1 ref={h1aRef} className={`${styles.h1} ${styles.shine} text-right`}>Hi</h1>
+            <h1 ref={h1aRef} className={`${styles.h1} ${styles.shine} text-right`}>
+              Hi
+            </h1>
           </Copy>
           <Copy delay={0.95}>
             <h1 ref={h1bRef} className={`${styles.h1} ${styles.shine} text-right`}>
@@ -275,17 +270,8 @@ export default function AboutPage() {
       </section>
 
       {/* Intro image + bio */}
-      <section
-        id="s-about"
-        data-title="Bio"
-        className={`${styles.sectionPad} ${styles.jsSection}`}
-      >
-        <div
-          ref={portraitWrapRef}
-          className={styles.parallaxWrap}
-          data-tilt="8"
-          data-translate="14"
-        >
+      <section id="s-about" data-title="Bio" className={`${styles.sectionPad} ${styles.jsSection}`}>
+        <div ref={portraitWrapRef} className={styles.parallaxWrap} data-tilt="8" data-translate="14">
           <div
             ref={portraitRef}
             className={`${styles.card} ${styles.cardGlow} mx-auto mb-12 w-1/3 overflow-hidden md:mb-16`}
@@ -303,10 +289,13 @@ export default function AboutPage() {
 
         <div ref={aboutCopyRef}>
           <h3 className={`${styles.muted} mx-auto mb-10 w-full text-left md:w-1/2 ${styles.h3}`}>
-            Front-end developer and designer based in Barcelona. I build high-performance websites and interfaces using Next.js, React, GSAP, Tailwind, and TypeScript — with a focus on animation, storytelling, and refined UX.
+            Front-end engineer and visual designer from Italy, based in Barcelona. My work moves
+            between art direction, code, and storytelling — combining aesthetic sensitivity with
+            solid technical foundations.
           </h3>
           <h3 className={`${styles.muted} mx-auto w-full text-left md:w-1/2 ${styles.h3}`}>
-            I collaborate with brands, artists, and studios to turn ideas into motion-driven products that are clean, fast, and accessible.
+            Over the past years I’ve collaborated with creative studios and brands across Europe,
+            designing experiences that blend interaction, narrative, and rhythm.
           </h3>
         </div>
       </section>
@@ -327,13 +316,59 @@ export default function AboutPage() {
         />
       </section>
 
+      {/* What I build */}
+      <section id="s-what" data-title="What I build" className={`${styles.sectionPad} ${styles.jsSection}`}>
+        <div>
+          <h2 className={styles.h2}>What I build</h2>
+          <div className="mt-6">
+            <h3 className={`${styles.muted} mx-auto mb-6 w-full text-left md:w-1/2 ${styles.h3}`}>
+              My focus lies in React, Next.js, TypeScript, and GSAP, often pairing motion with clarity and precision.
+            </h3>
+            <h3 className={`${styles.muted} mx-auto mb-6 w-full text-left md:w-1/2 ${styles.h3}`}>
+              I enjoy shaping interfaces that feel fluid and intentional — from smooth scroll reveals to robust, scalable architectures.
+            </h3>
+            <h3 className={`${styles.muted} mx-auto w-full text-left md:w-1/2 ${styles.h3}`}>
+              I believe every line of code can carry emotion when written with intention.
+            </h3>
+          </div>
+        </div>
+      </section>
+
+      {/* Philosophy */}
+      <section id="s-philosophy" data-title="Philosophy" className={`${styles.sectionPad} ${styles.jsSection}`}>
+        <div>
+          <h2 className={styles.h2}>Philosophy</h2>
+          <div className="mt-6">
+            <h3 className={`${styles.muted} mx-auto mb-6 w-full text-left md:w-1/2 ${styles.h3}`}>
+              I see the web as a living medium: part craft, part poetry, part system.
+            </h3>
+            <h3 className={`${styles.muted} mx-auto mb-6 w-full text-left md:w-1/2 ${styles.h3}`}>
+              My process starts with curiosity — understanding the story behind a brand or idea, then turning it into movement, structure, and flow.
+            </h3>
+            <h3 className={`${styles.muted} mx-auto w-full text-left md:w-1/2 ${styles.h3}`}>
+              Design, for me, isn’t just how things look. It’s how they breathe.
+            </h3>
+          </div>
+        </div>
+      </section>
+
+      {/* Beyond code */}
+      <section id="s-beyond" data-title="Beyond" className={`${styles.sectionPad} ${styles.jsSection}`}>
+        <div>
+          <h2 className={styles.h2}>Beyond code</h2>
+          <div className="mt-6">
+            <h3 className={`${styles.muted} mx-auto mb-6 w-full text-left md:w-1/2 ${styles.h3}`}>
+              Outside development, I’m also a painter and creative director, exploring the relationship between nature, emotion, and memory through color and composition.
+            </h3>
+            <h3 className={`${styles.muted} mx-auto w-full text-left md:w-1/2 ${styles.h3}`}>
+              That duality — between the organic and the digital — defines how I approach every project.
+            </h3>
+          </div>
+        </div>
+      </section>
+
       {/* CV */}
-      <section
-        id="s-cv"
-        data-title="CV"
-        ref={cvWrapperRef}
-        className={`${styles.sectionPad} ${styles.jsSection} mx-auto`}
-      >
+      <section id="s-cv" data-title="CV" ref={cvWrapperRef} className={`${styles.sectionPad} ${styles.jsSection} mx-auto`}>
         <div ref={cvHeaderRef} className="mb-6">
           <h2 className={styles.h2}>CV</h2>
         </div>
@@ -352,7 +387,6 @@ export default function AboutPage() {
         </div>
       </section>
 
-      {/* Extra sections */}
       <Spotlight />
       <CTACard />
     </div>
