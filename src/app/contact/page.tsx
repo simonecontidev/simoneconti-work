@@ -177,13 +177,32 @@ export default function ContactPage() {
                 text-3xl sm:text-4xl md:text-6xl font-semibold leading-tight tracking-tight
               "
             >
-              Bring beauty one pixel at time
+              Let’s build something that feels alive.
             </h2>
+          </Copy>
+          <Copy delay={0.7}>
+            <p
+              className="mt-4 max-w-xl text-base sm:text-lg md:text-xl text-zinc-600 dark:text-zinc-400"
+            >
+              I’m always open to collaborations, freelance projects, or full-time roles that value design, motion, and meaningful interaction.
+            </p>
           </Copy>
         </div>
 
         {/* Right column */}
         <div className="flex flex-col gap-8 sm:gap-10">
+          <Copy delay={0.75}>
+            <p className="text-base sm:text-lg mb-4">
+              Whether you’re looking for a frontend engineer, a creative developer, or just curious about my work, I’d love to hear from you.
+            </p>
+            <p className="text-base sm:text-lg mb-4">
+              I believe the best digital experiences are not only functional but emotional — coded with clarity, rhythm, and care.
+            </p>
+            <p className="text-base sm:text-lg">
+              Drop me a message. Tell me about your project, your product, or your team. I’ll reply personally within a day.
+            </p>
+          </Copy>
+
           <div>
             <Copy delay={0.8}>
               <p className="mb-2 text-xs sm:text-sm uppercase tracking-wide text-zinc-600 dark:text-zinc-400/80">
@@ -198,9 +217,9 @@ export default function ContactPage() {
           <div>
             <Copy delay={1.0}>
               <p className="mb-2 text-xs sm:text-sm uppercase tracking-wide text-zinc-600 dark:text-zinc-400/80">
-                Base
+                Location
               </p>
-              <p className="text-base sm:text-lg">Barcelona — Remote</p>
+              <p className="text-base sm:text-lg">Barcelona · Remote worldwide</p>
             </Copy>
           </div>
 
@@ -215,8 +234,11 @@ export default function ContactPage() {
                 transition
               "
             >
-              simonecontisid@gmail.com
+              Let’s Talk
             </button>
+            <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400/80">
+              or email me at <a href="mailto:hello@simoneconti.work" className="underline underline-offset-2 hover:no-underline">hello@simoneconti.work</a>
+            </p>
           </div>
 
           <div>
