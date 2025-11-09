@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import MenuBtn from "../../components/MenuBtn/MenuBtn";
 import useViewTransition from "../../hooks/useViewTransition";
-import { useGsapRegister } from "../../src/lib/gsap";
+import { useGsapRegister } from "@/lib/gsap";
 import SlidingTextLink from "../../components/animations/SlidingTextLink";
 
 type LinkItem = { href: string; label: string };
@@ -15,18 +15,48 @@ const LINKS: LinkItem[] = [
   { href: "/contact", label: "Contact" },
 ];
 
+/** Safe matches/closest helpers per vecchi browser o SSR */
+function elementMatches(el: Element, selector: string): boolean {
+  const anyEl = el as any;
+  const native =
+    anyEl.matches ||
+    anyEl.msMatchesSelector ||
+    anyEl.webkitMatchesSelector;
+  if (native) return native.call(el, selector);
+
+  const doc: Document | undefined =
+    (el as any).ownerDocument || (globalThis as any).document;
+  if (!doc) return false;
+
+  const list = doc.querySelectorAll(selector);
+  for (let i = 0; i < list.length; i++) if (list[i] === el) return true;
+  return false;
+}
+
+function safeClosest(start: Element | null, selector: string): Element | null {
+  let el: Element | null = start;
+  while (el) {
+    if (elementMatches(el, selector)) return el;
+    el = el.parentElement;
+  }
+  return null;
+}
+
 export default function Nav() {
   const [isOpen, setIsOpen] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
   const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
 
   const menuRef = useRef<HTMLDivElement | null>(null);
-  const mountedRef = useRef(false); // <-- NEW: per evitare animazione di chiusura al primo paint
+  const mountedRef = useRef(false);
   const { navigateWithTransition } = useViewTransition();
   const { gsap } = useGsapRegister();
 
   const isCoarse = useMemo(
-    () => (typeof window !== "undefined" ? window.matchMedia("(pointer: coarse)").matches : false),
+    () =>
+      typeof window !== "undefined"
+        ? window.matchMedia("(pointer: coarse)").matches
+        : false,
     []
   );
 
@@ -51,7 +81,7 @@ export default function Nav() {
     if (!menu) return;
     const items = Array.from(menu.querySelectorAll<HTMLElement>("[data-nav-item]"));
 
-    // ✅ Primo mount: imposta solo lo stato, non animare la chiusura (evita flash)
+    // Primo mount: evita animazione di chiusura/flash
     if (!mountedRef.current) {
       mountedRef.current = true;
       gsap.set(menu, {
@@ -97,6 +127,7 @@ export default function Nav() {
         ease: "power3.in",
         duration: 0.8,
         delay: 0.2,
+        // ✅ fix: onStart deve tornare void
         onStart: () => {
           gsap.set(menu, { pointerEvents: "none" });
         },
@@ -132,7 +163,6 @@ export default function Nav() {
         ref={menuRef}
         data-menu={isOpen ? "open" : "closed"}
         className="fixed inset-0 z-[100] bg-neutral-800/95 p-4 md:p-6"
-        // ✅ Stato SSR iniziale già chiuso (niente flash prima di JS)
         style={{
           clipPath: isOpen ? "circle(100% at 50% 50%)" : "circle(0% at 50% 50%)",
           pointerEvents: isOpen ? "auto" : "none",

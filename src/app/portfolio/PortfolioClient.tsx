@@ -3,24 +3,24 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
-import NextImage from "next/image";
+import NextImage, { ImageProps } from "next/image";
 import { PROJECTS } from "./_data";
 import { useGsapRegister } from "@/lib/gsap";
 
 // Tipo “Project” derivato dai dati
 type Project = (typeof PROJECTS)[number];
 
-/** Ricava una immagine primaria dal progetto, restituendo un path utilizzabile da <Image/> */
+/** Ritorna un path valido per <Image/> (root-relative) cercando nei vari campi. */
 function getPrimaryImage(p: any): string | null {
-  // 1) campo "img" string
+  // 1) p.img (string)
   if (typeof p?.img === "string" && p.img.trim()) {
     return p.img.startsWith("/portfolio/") ? p.img : `/portfolio/${p.img}`;
   }
-  // 2) campo "image" string
+  // 2) p.image (string)
   if (typeof p?.image === "string" && p.image.trim()) {
     return p.image.startsWith("/portfolio/") ? p.image : `/portfolio/${p.image}`;
   }
-  // 3) array "images": prova la prima entry (string o {src})
+  // 3) p.images[0] (string | {src})
   if (Array.isArray(p?.images) && p.images.length > 0) {
     const first = p.images[0];
     if (typeof first === "string" && first.trim()) {
@@ -31,6 +31,18 @@ function getPrimaryImage(p: any): string | null {
     }
   }
   return null;
+}
+
+/** <Image/> con fallback automatico a /portfolio/placeholder.jpg se l’asset manca. */
+function FallbackImage(props: Omit<ImageProps, "src"> & { src: string }) {
+  const [src, setSrc] = useState(props.src);
+  return (
+    <NextImage
+      {...props}
+      src={src}
+      onError={() => setSrc("/portfolio/placeholder.jpg")}
+    />
+  );
 }
 
 export default function PortfolioClient() {
@@ -44,7 +56,7 @@ export default function PortfolioClient() {
     (async () => {
       const tasks = PROJECTS.map((p) => {
         const src = getPrimaryImage(p);
-        if (!src) return Promise.resolve(); // nessuna immagine → niente preload
+        if (!src) return Promise.resolve();
         return new Promise<void>((res) => {
           const img = new window.Image();
           img.onload = () => res();
@@ -122,7 +134,7 @@ export default function PortfolioClient() {
     return () => ctx.revert();
   }, [gsap, isLoaded]);
 
-  // Filtra i progetti che hanno una immagine valida e spezzali in righe da 3
+  // Filtra i progetti con immagine valida e spezzali in righe da 3
   const rows = useMemo(() => {
     const withImg = PROJECTS.filter((p) => !!getPrimaryImage(p));
     const out: Project[][] = [];
@@ -142,18 +154,18 @@ export default function PortfolioClient() {
             <div key={idx} className="mb-8 flex gap-8 max-md:flex-col">
               {group.map((p) => {
                 const src = getPrimaryImage(p);
-                if (!src) return null; // sicurezza ulteriore
+                if (!src) return null;
                 return (
                   <Link
                     key={p.slug}
-                    href={`/portfolio/${p.slug}`}
+                    href={`/portfolio/${p.slug}/`} // trailing slash per export
                     className={[
                       "p-col group relative overflow-hidden rounded-2xl border border-white/10",
                       (p as any).size === "lg" ? "flex-[2]" : "flex-[1.25]",
                       "h-[380px] max-md:h-[300px]",
                     ].join(" ")}
                   >
-                    <NextImage
+                    <FallbackImage
                       src={src}
                       alt={p.title}
                       fill
@@ -164,12 +176,12 @@ export default function PortfolioClient() {
 
                     <div className="absolute left-4 bottom-4">
                       <div className="clip-mask">
-                        {/* Titolo sempre visibile (nel tuo layout stavi mostrando role qui) */}
+                        {/* Mostra ruolo se c'è, altrimenti il titolo */}
                         <p className="p-title text-lg font-medium tracking-tight">
                           {(p as any).role ?? p.title}
                         </p>
                       </div>
-                      {/* Role che compare dopo (mostriamo il titolo come secondario, invertito come avevi impostato) */}
+                      {/* Seconda riga: titolo (o vuoto) */}
                       <p className="p-role mt-1 text-xs text-white/80">
                         {p.title}
                       </p>
