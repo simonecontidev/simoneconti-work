@@ -31,7 +31,6 @@ export default function CTACard() {
             <div className="mt-6">
               <AnimatedButton
                 label="Drop your portfolio"
-                route="/contact"
                 onClick={() => navigateWithTransition("/contact")}
               />
             </div>

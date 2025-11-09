@@ -97,7 +97,9 @@ export default function Nav() {
         ease: "power3.in",
         duration: 0.8,
         delay: 0.2,
-        onStart: () => gsap.set(menu, { pointerEvents: "none" }),
+        onStart: () => {
+          gsap.set(menu, { pointerEvents: "none" });
+        },
         onComplete: () => setIsAnimating(false),
       });
     }

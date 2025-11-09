@@ -7,6 +7,9 @@ type Item = { src: string; alt: string; caption?: string; bgColor?: string };
 type RevealDirection = "top" | "bottom" | "left" | "right";
 type ParallaxMode = "same" | "alternate" | "random";
 
+/** ✅ Tipo helper: abilita --custom-props in maniera tip-safe */
+type CSSVars = React.CSSProperties & { [key: `--${string}`]: string };
+
 export type ScrollImageRevealProps = {
   items: Item[];
   revealFrom?: RevealDirection;
@@ -63,13 +66,14 @@ export default function ScrollImageReveal({
   const containerRef = useRef<HTMLDivElement>(null);
   const bgRef = useRef<HTMLDivElement>(null);
 
-  const cssVars = useMemo<React.CSSProperties>(() => {
-    const v: React.CSSProperties = {};
-    if (colors?.bg) v["--cmp-surface" as any] = colors.bg;
-    if (colors?.text) v["--cmp-text" as any] = colors.text;
-    if (colors?.textMuted) v["--cmp-muted" as any] = colors.textMuted;
-    if (colors?.mediaBg) v["--cmp-card" as any] = colors.mediaBg;
-    if (colors?.accentStrong) v["--cmp-surface-strong" as any] = colors.accentStrong;
+  // ✅ Nessun "any": usiamo CSSVars per le custom properties
+  const cssVars = useMemo<CSSVars>(() => {
+    const v: CSSVars = {};
+    if (colors?.bg) v["--cmp-surface"] = colors.bg;
+    if (colors?.text) v["--cmp-text"] = colors.text;
+    if (colors?.textMuted) v["--cmp-muted"] = colors.textMuted;
+    if (colors?.mediaBg) v["--cmp-card"] = colors.mediaBg;
+    if (colors?.accentStrong) v["--cmp-surface-strong"] = colors.accentStrong;
     return v;
   }, [colors]);
 

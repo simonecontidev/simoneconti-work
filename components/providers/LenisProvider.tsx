@@ -10,18 +10,30 @@ gsap.registerPlugin(ScrollTrigger);
 
 export default function LenisProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
-    const prefersReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (typeof window === "undefined") return;
+
+    const prefersReduced =
+      window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches ?? false;
     if (prefersReduced) return;
 
+    // Evita conflitti con CSS native smooth scrolling
+    const prevScrollBehavior = document.documentElement.style.scrollBehavior;
+    document.documentElement.style.scrollBehavior = "auto";
+
+    // NOTA: niente smoothTouch — non è presente nel LenisOptions della tua versione
     const lenis = new Lenis({
       duration: 1.1,
       smoothWheel: true,
-      smoothTouch: false,
+      // smoothTouch: false, // <-- rimosso: non tipizzato in questa versione
     });
 
+    // Mantieni ScrollTrigger in sync
+    const onLenisScroll = () => ScrollTrigger.update();
+    lenis.on("scroll", onLenisScroll);
+
+    // Usa il ticker di GSAP (fornisce 'time' in secondi)
     const raf = (time: number) => {
-      // gsap.ticker -> seconds ; lenis.raf -> ms
-      lenis.raf(time * 1000);
+      lenis.raf(time * 1000); // Lenis vuole ms
     };
 
     gsap.ticker.add(raf);
@@ -30,8 +42,10 @@ export default function LenisProvider({ children }: { children: ReactNode }) {
 
     return () => {
       gsap.ticker.remove(raf);
-      // @ts-ignore optional chaining at runtime
+      lenis.off("scroll", onLenisScroll);
+      // @ts-ignore lenis ha destroy a runtime
       lenis?.destroy?.();
+      document.documentElement.style.scrollBehavior = prevScrollBehavior;
     };
   }, []);
 

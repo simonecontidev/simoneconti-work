@@ -52,16 +52,34 @@ const slides: Slide[] = [
 ];
 
 export default function Slider() {
-  const { gsap, ScrollTrigger, SplitText } = useGsapRegister();
+  // ❌ NON destrutturiamo SplitText: non è tipizzato in useGsapRegister
+  const { gsap, ScrollTrigger } = useGsapRegister();
 
   const sliderRef = useRef<HTMLDivElement | null>(null);
   const sliderImagesRef = useRef<HTMLDivElement | null>(null);
   const sliderTitleRef = useRef<HTMLDivElement | null>(null);
   const sliderIndicesRef = useRef<HTMLDivElement | null>(null);
   const progressBarRef = useRef<HTMLDivElement | null>(null);
+  // ✅ SplitText dinamico, registrato a runtime e usato da ref
+  const splitRef = useRef<any>(null);
 
   useGSAP(
     () => {
+      // Importa e registra SplitText una volta (non blocca se fallisce)
+      (async () => {
+        try {
+          const mod = await import("gsap/SplitText");
+          // mod può esportare come default o named; gestiamo entrambi
+          const SplitText = (mod as any).SplitText ?? (mod as any).default ?? null;
+          if (SplitText) {
+            gsap.registerPlugin(SplitText);
+            splitRef.current = SplitText;
+          }
+        } catch {
+          // ok: useremo il fallback senza SplitText
+        }
+      })();
+
       let activeSlide = 0;
       let currentSplit: any = null;
 
@@ -109,32 +127,41 @@ export default function Slider() {
           </h1>
         `;
 
-        try {
-          // @ts-expect-error: SplitText disponibile a runtime
-          currentSplit = new SplitText(sliderTitleRef.current.querySelector("h1"), {
-            type: "lines",
-            linesClass: "line block will-change-transform",
-            mask: "lines",
-          });
-          const lines = (currentSplit.lines || []) as HTMLElement[];
+        const h1 = sliderTitleRef.current.querySelector("h1") as HTMLElement | null;
+
+        if (splitRef.current && h1) {
+          try {
+            // Usa la classe SplitText registrata
+            currentSplit = new splitRef.current(h1, {
+              type: "lines",
+              linesClass: "line block will-change-transform",
+              mask: "lines",
+            });
+            const lines = (currentSplit.lines || []) as HTMLElement[];
+            gsap.fromTo(
+              lines,
+              { yPercent: 100, opacity: 0, filter: "blur(6px)", letterSpacing: "0.06em" },
+              {
+                yPercent: 0,
+                opacity: 1,
+                filter: "blur(0px)",
+                letterSpacing: "0em",
+                duration: 0.9,
+                ease: "power3.out",
+                stagger: 0.06,
+                clearProps: "transform,opacity,filter,letterSpacing",
+              }
+            );
+            return;
+          } catch {
+            // fallback sotto
+          }
+        }
+
+        // fallback se SplitText non disponibile
+        if (h1) {
           gsap.fromTo(
-            lines,
-            { yPercent: 100, opacity: 0, filter: "blur(6px)", letterSpacing: "0.06em" },
-            {
-              yPercent: 0,
-              opacity: 1,
-              filter: "blur(0px)",
-              letterSpacing: "0em",
-              duration: 0.9,
-              ease: "power3.out",
-              stagger: 0.06,
-              clearProps: "transform,opacity,filter,letterSpacing",
-            }
-          );
-        } catch {
-          // fallback se SplitText non è disponibile
-          gsap.fromTo(
-            sliderTitleRef.current.querySelector("h1"),
+            h1,
             { yPercent: 30, opacity: 0, filter: "blur(4px)" },
             {
               yPercent: 0,

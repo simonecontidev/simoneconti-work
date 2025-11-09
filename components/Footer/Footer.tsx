@@ -1,4 +1,3 @@
-// components/Footer/Footer.tsx
 "use client";
 
 import { useEffect, useRef } from "react";
@@ -6,7 +5,9 @@ import { RiLinkedinBoxLine, RiGithubLine, RiCodepenLine } from "react-icons/ri";
 import Copy from "../../components/Copy/Copy";
 import VTLink from "../../components/ui/VTLink";
 
-export default function Footer() {
+type FooterProps = { className?: string };
+
+export default function Footer({ className = "" }: FooterProps) {
   const iconsRef = useRef<HTMLDivElement | null>(null);
 
   // Micro-animazione icone quando il footer entra in viewport
@@ -44,10 +45,11 @@ export default function Footer() {
     // ⬇️ Footer NEL FLOW (non copre nulla)
     <footer
       aria-label="Site footer"
-      className="
+      className={`
         relative z-[10] w-full
         bg-[var(--bg)] text-[var(--fg)]
-      "
+        ${className}
+      `}
     >
       {/* ⬇️ Contenuto sticky: si 'scopre' elegante dal basso senza coprire il main */}
       <div className="sticky bottom-0">

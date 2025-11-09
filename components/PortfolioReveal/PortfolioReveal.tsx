@@ -4,24 +4,20 @@ import { useEffect, useMemo, useRef } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import styles from "./PortfolioReveal.module.css";
-import { PROJECTS } from "./_data"; // usa la tua sorgente
 
-type Project = (typeof PROJECTS)[number];
 type RevealDirection = "top" | "bottom" | "left" | "right";
 
-export default function PortfolioReveal({
-  revealFrom = "top",
-  once = true,
-  duration = 1.2,
-  ease = "power2.out",
-  fadeUp = true,
-  fadeUpOffset = 20,
-  enableParallax = true,
-  parallaxAmount = 90,
-  parallaxEase = "power1.out",
-  parallaxMobileScale = 0.6,
-  className,
-}: {
+// Tipo minimale basato su ciò che il componente usa davvero
+export type PortfolioCardProject = {
+  slug: string;
+  title: string;
+  img: string;         // es: "my-project.jpg" (sarà usato come `/portfolio/${img}`)
+  role?: string;
+  bgColor?: string;
+};
+
+type Props = {
+  projects: PortfolioCardProject[];
   revealFrom?: RevealDirection;
   once?: boolean;
   duration?: number;
@@ -33,7 +29,22 @@ export default function PortfolioReveal({
   parallaxEase?: string;
   parallaxMobileScale?: number;
   className?: string;
-}) {
+};
+
+export default function PortfolioReveal({
+  projects = [],
+  revealFrom = "top",
+  once = true,
+  duration = 1.2,
+  ease = "power2.out",
+  fadeUp = true,
+  fadeUpOffset = 20,
+  enableParallax = true,
+  parallaxAmount = 90,
+  parallaxEase = "power1.out",
+  parallaxMobileScale = 0.6,
+  className,
+}: Props) {
   const rootRef = useRef<HTMLDivElement>(null);
   const bgRef = useRef<HTMLDivElement>(null);
 
@@ -81,13 +92,13 @@ export default function PortfolioReveal({
           gsap.set(img, { clipPath: clipStart, scale: 1.05, willChange: "clip-path, transform" });
           if (fadeUp) gsap.set(media, { opacity: 0.9, y: fadeUpOffset });
 
-          // ⬇️ titolo sempre visibile
+          // titolo sempre visibile
           gsap.set(title, { y: 0, opacity: 1 });
 
-          // ⬇️ role nascosto: comparirà solo on hover/focus
+          // role nascosto (solo hover/focus)
           if (role) gsap.set(role, { y: 12, opacity: 0 });
 
-          // reveal clip + fade-up wrapper
+          // reveal clip + fade-up
           gsap.fromTo(
             img,
             { clipPath: clipStart, scale: 1.05 },
@@ -165,7 +176,7 @@ export default function PortfolioReveal({
             );
           }
 
-          // hover/focus: img zoom + role reveal (titolo non si muove)
+          // hover/focus: img zoom + role
           const onEnter = () => {
             gsap.to(img, { scale: 1.12, duration: 1.2, ease: "power4.out" });
             if (role) gsap.to(role, { y: 0, opacity: 1, duration: 0.6, ease: "power3.out", delay: 0.06 });
@@ -227,7 +238,7 @@ export default function PortfolioReveal({
       </header>
 
       <div className={styles.grid}>
-        {PROJECTS.map((p: Project, idx) => (
+        {projects.map((p, idx) => (
           <Link
             key={p.slug}
             href={`/portfolio/${p.slug}`}

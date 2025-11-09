@@ -7,7 +7,9 @@ import AnimatedButton from "../../components/ui/AnimatedButton";
 import { useGsapRegister } from "@/lib/gsap";
 import ThemeToggle from "../../components/ThemeToggle/ThemeToggle";
 
-export default function TopBar() {
+type TopBarProps = { className?: string };
+
+export default function TopBar({ className = "" }: TopBarProps) {
   const barRef = useRef<HTMLDivElement | null>(null);
   const { navigateWithTransition } = useViewTransition();
   const { gsap } = useGsapRegister();
@@ -80,14 +82,15 @@ export default function TopBar() {
     <>
       <div
         ref={barRef}
-        className="
+        className={`
           fixed inset-x-0 top-0 z-50
           flex items-center justify-between
           px-6 py-3 md:px-8 md:py-4
           backdrop-blur-sm bg-transparent
           transition-transform duration-500 ease-[cubic-bezier(0.19,1,0.22,1)]
           pointer-events-auto
-        "
+          ${className}
+        `}
         style={{
           isolation: "isolate",
           // piccolo padding in più verso l'alto + safe area
@@ -115,7 +118,6 @@ export default function TopBar() {
         <div className="flex items-center gap-4">
           <AnimatedButton
             label="Contact me"
-            route="/contact"
             hoverLabel="View Work"
             onClick={() => navigateWithTransition("/contact")}
           />

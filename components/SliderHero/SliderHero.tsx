@@ -249,9 +249,13 @@ export default function SliderHero({
       startY.current = e.clientY;
       lastX.current = e.clientX;
       // Evita drag dell'immagine
-      (e.target as HTMLElement)?.closest("img")?.addEventListener("dragstart", (ev) => {
-        ev.preventDefault();
-      }, { once: true });
+      (e.target as HTMLElement)?.closest("img")?.addEventListener(
+        "dragstart",
+        (ev) => {
+          ev.preventDefault();
+        },
+        { once: true }
+      );
       slider.setPointerCapture(e.pointerId);
     };
     const onMove = (e: PointerEvent) => {
@@ -269,7 +273,7 @@ export default function SliderHero({
       if (Math.abs(dy) > Math.abs(dx) * 1.2) return;
 
       // Soglia swipe: ~9% desktop, ~6% mobile
-      const base = (slider.clientWidth || window.innerWidth);
+      const base = slider.clientWidth || window.innerWidth;
       const threshold = base * (window.innerWidth < 560 ? 0.06 : 0.09);
       if (Math.abs(dx) > threshold) {
         dx < 0 ? goRight() : goLeft();
@@ -326,17 +330,12 @@ export default function SliderHero({
               alt=""
               draggable={false}
               decoding="async"
-              fetchpriority="high"
+              fetchPriority="high"
             />
           </div>
           <div className="sh-img" ref={nextLayerRef} aria-hidden="true">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={firstSrc}
-              alt=""
-              draggable={false}
-              decoding="async"
-            />
+            <img src={firstSrc} alt="" draggable={false} decoding="async" />
           </div>
         </div>
 
@@ -374,13 +373,7 @@ export default function SliderHero({
                 tabIndex={active ? 0 : -1}
               >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={src}
-                  alt=""
-                  loading="lazy"
-                  decoding="async"
-                  draggable={false}
-                />
+                <img src={src} alt="" loading="lazy" decoding="async" draggable={false} />
               </div>
             );
           })}
@@ -388,8 +381,12 @@ export default function SliderHero({
 
         {/* Indicators (- / +) */}
         <div className="sh-indicators" aria-label="Previous/Next controls">
-          <p role="button" aria-label="Previous slide">-</p>
-          <p role="button" aria-label="Next slide">+</p>
+          <p role="button" aria-label="Previous slide">
+            -
+          </p>
+          <p role="button" aria-label="Next slide">
+            +
+          </p>
         </div>
       </div>
 
@@ -434,10 +431,20 @@ export default function SliderHero({
           touch-action: pan-y;
           outline: none;
         }
-        .sh-images { position: absolute; inset: 0; }
-        .sh-img { position: absolute; inset: 0; overflow: hidden; }
+        .sh-images {
+          position: absolute;
+          inset: 0;
+        }
+        .sh-img {
+          position: absolute;
+          inset: 0;
+          overflow: hidden;
+        }
         .sh-img img {
-          width: 100%; height: 100%; object-fit: cover; display: block;
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          display: block;
           -webkit-user-drag: none;
           user-drag: none;
           pointer-events: none;
@@ -446,120 +453,196 @@ export default function SliderHero({
         /* Title (uses measured line-height) */
         .sh-title {
           position: absolute;
-          top: 50%; left: 50%;
+          top: 50%;
+          left: 50%;
           transform: translate(-50%, -50%);
           height: var(--titleLH, 60px);
-          overflow: hidden; z-index: 4; text-align: center;
-          width: 100%; padding: 0 4vw;
+          overflow: hidden;
+          z-index: 4;
+          text-align: center;
+          width: 100%;
+          padding: 0 4vw;
         }
-        .sh-title-wrapper { display: grid; gap: 0; justify-items: center; }
+        .sh-title-wrapper {
+          display: grid;
+          gap: 0;
+          justify-items: center;
+        }
         .sh-title-wrapper p {
           font-size: clamp(22px, 6vw, 54px);
           line-height: clamp(32px, 7.5vw, 64px);
-          letter-spacing: 0.01em; margin: 0;
+          letter-spacing: 0.01em;
+          margin: 0;
           text-wrap: balance;
         }
 
         /* Counter left (uses measured line-height) */
         .sh-counter {
-          position: absolute; left: 5vw; top: 50%;
+          position: absolute;
+          left: 5vw;
+          top: 50%;
           transform: translateY(-50%);
           height: var(--counterLH, 20px);
-          overflow: hidden; z-index: 4;
+          overflow: hidden;
+          z-index: 4;
         }
-        .sh-counter-inner { display: grid; gap: 0; }
+        .sh-counter-inner {
+          display: grid;
+          gap: 0;
+        }
         .sh-counter-inner p {
           font-size: clamp(12px, 1.8vw, 16px);
           line-height: var(--counterLH, 20px);
-          opacity: 0.9; margin: 0;
+          opacity: 0.9;
+          margin: 0;
         }
 
         /* Indicators & Thumbs base */
-        .sh-indicators, .sh-preview {
-          position: absolute; left: 50%;
+        .sh-indicators,
+        .sh-preview {
+          position: absolute;
+          left: 50%;
           transform: translateX(-50%);
-          z-index: 5; pointer-events: auto;
+          z-index: 5;
+          pointer-events: auto;
         }
 
         .sh-indicators {
           bottom: max(2.5em, env(safe-area-inset-bottom));
-          display: flex; justify-content: space-between; align-items: center;
-          gap: 24px; padding: 0 2vw;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          gap: 24px;
+          padding: 0 2vw;
         }
         .sh-indicators p {
           font-size: clamp(24px, 4.5vw, 34px);
           line-height: 1;
-          cursor: pointer; opacity: 0.9;
-          transition: opacity 0.25s ease; user-select: none; margin: 0;
+          cursor: pointer;
+          opacity: 0.9;
+          transition: opacity 0.25s ease;
+          user-select: none;
+          margin: 0;
           /* ✅ tap area grande */
           padding: 10px 14px;
           border-radius: 12px;
         }
-        .sh-indicators p:hover { opacity: 1; }
-        .sh-indicators p:active { opacity: 0.75; }
+        .sh-indicators p:hover {
+          opacity: 1;
+        }
+        .sh-indicators p:active {
+          opacity: 0.75;
+        }
 
         .sh-preview {
           bottom: calc(max(8em, 46px) + env(safe-area-inset-bottom));
-          display: grid; grid-template-columns: repeat(${total}, 1fr);
+          display: grid;
+          grid-template-columns: repeat(${total}, 1fr);
           gap: 8px;
         }
         .sh-preview-item {
-          aspect-ratio: 16 / 10; position: relative; overflow: hidden;
-          border-radius: 8px; outline: 1px solid rgba(255,255,255,0.25);
-          opacity: 0.75; transition: opacity 0.25s ease, outline-color 0.25s ease, transform 0.2s ease;
+          aspect-ratio: 16 / 10;
+          position: relative;
+          overflow: hidden;
+          border-radius: 8px;
+          outline: 1px solid rgba(255, 255, 255, 0.25);
+          opacity: 0.75;
+          transition: opacity 0.25s ease, outline-color 0.25s ease, transform 0.2s ease;
           cursor: pointer;
           backdrop-filter: saturate(110%);
         }
         .sh-preview-item:focus-visible {
-          outline: 2px solid rgba(255,255,255,0.95);
+          outline: 2px solid rgba(255, 255, 255, 0.95);
         }
-        .sh-preview-item img { width: 100%; height: 100%; object-fit: cover; display: block; }
-        .sh-preview-item.active { opacity: 1; outline-color: rgba(255,255,255,0.9); transform: translateY(-1px); }
+        .sh-preview-item img {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          display: block;
+        }
+        .sh-preview-item.active {
+          opacity: 1;
+          outline-color: rgba(255, 255, 255, 0.9);
+          transform: translateY(-1px);
+        }
 
         /* Overlay centrati quando in modalità BLEED */
         .sh--bleed .sh-title,
         .sh--bleed .sh-preview,
         .sh--bleed .sh-indicators {
           width: min(1200px, 92vw);
-          margin-left: auto; margin-right: auto;
+          margin-left: auto;
+          margin-right: auto;
         }
 
         /* breakpoints */
-        @media (max-width: 1200px) { .sh-indicators { gap: 18px; } }
+        @media (max-width: 1200px) {
+          .sh-indicators {
+            gap: 18px;
+          }
+        }
         @media (max-width: 900px) {
-          .sh-preview { grid-template-columns: repeat(${Math.max(3, Math.min(total, 5))}, 1fr); }
+          .sh-preview {
+            grid-template-columns: repeat(${Math.max(3, Math.min(total, 5))}, 1fr);
+          }
         }
         @media (max-width: 560px) {
-          .sh-title { height: var(--titleLH, 52px); width: 92vw; padding: 0 2vw; }
-          .sh-counter { left: 4vw; }
+          .sh-title {
+            height: var(--titleLH, 52px);
+            width: 92vw;
+            padding: 0 2vw;
+          }
+          .sh-counter {
+            left: 4vw;
+          }
 
           /* thumbs in carosello orizzontale */
           .sh-preview {
             width: 92vw;
-            grid-auto-flow: column; grid-auto-columns: 58%;
+            grid-auto-flow: column;
+            grid-auto-columns: 58%;
             grid-template-columns: unset;
-            overflow-x: auto; overscroll-behavior-x: contain;
-            -webkit-overflow-scrolling: touch; scroll-snap-type: x mandatory;
-            gap: 10px; padding: 0 2px; scrollbar-width: none;
+            overflow-x: auto;
+            overscroll-behavior-x: contain;
+            -webkit-overflow-scrolling: touch;
+            scroll-snap-type: x mandatory;
+            gap: 10px;
+            padding: 0 2px;
+            scrollbar-width: none;
           }
-          .sh-preview::-webkit-scrollbar { display: none; }
+          .sh-preview::-webkit-scrollbar {
+            display: none;
+          }
           .sh-preview-item {
-            scroll-snap-align: center; aspect-ratio: 16 / 10;
-            border-radius: 10px; outline-width: 1px; opacity: 0.86;
+            scroll-snap-align: center;
+            aspect-ratio: 16 / 10;
+            border-radius: 10px;
+            outline-width: 1px;
+            opacity: 0.86;
           }
 
           /* tappable area più grande anche per i bottoni */
-          .sh-indicators p { padding: 12px 16px; border-radius: 14px; }
+          .sh-indicators p {
+            padding: 12px 16px;
+            border-radius: 14px;
+          }
         }
         @media (max-width: 380px) {
-          .sh-preview { grid-auto-columns: 64%; gap: 8px; }
-          .sh-preview-item { aspect-ratio: 16 / 11; }
+          .sh-preview {
+            grid-auto-columns: 64%;
+            gap: 8px;
+          }
+          .sh-preview-item {
+            aspect-ratio: 16 / 11;
+          }
         }
 
         /* riduci animazioni per utenti con motion ridotto */
         @media (prefers-reduced-motion: reduce) {
           .sh-preview-item,
-          .sh-indicators p { transition: none !important; }
+          .sh-indicators p {
+            transition: none !important;
+          }
         }
       `}</style>
     </div>

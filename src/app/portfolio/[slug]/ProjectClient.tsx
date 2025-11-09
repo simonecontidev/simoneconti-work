@@ -34,14 +34,9 @@ function AnimatedViewLive({
       ].join(" ")}
     >
       <span className="relative z-10">{label}</span>
-      {/* underline sweep */}
-      <span
-        aria-hidden
-        className="pointer-events-none absolute inset-0 overflow-hidden rounded-full"
-      >
+      <span aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden rounded-full">
         <span className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/15 to-transparent transition-transform duration-700 group-hover:translate-x-full" />
       </span>
-      {/* subtle border glow on hover */}
       <span
         aria-hidden
         className="pointer-events-none absolute inset-0 rounded-full ring-1 ring-inset ring-white/10 group-hover:ring-white/20 transition-colors"
@@ -68,21 +63,25 @@ function CopyReveal({
   useEffect(() => {
     if (!ref.current) return;
 
+    let splitInstance: any | null = null;
+
     (async () => {
       const SplitType =
         (await import("@/lib/SplitType")).default ??
         (await import("../../../lib/SplitType/index")).default;
 
-      const split = new SplitType(ref.current, { types: "lines", tagName: "span" });
+      const el = ref.current!; // ✅ non-null assertion dopo il guard
+      splitInstance = new SplitType(el, { types: "lines", tagName: "span" });
 
-      split.lines.forEach((line: HTMLElement) => {
+      // incapsula ogni linea in .line
+      (splitInstance.lines as HTMLElement[]).forEach((line: HTMLElement) => {
         const wrapper = document.createElement("div");
         wrapper.className = "line";
         line.parentNode?.insertBefore(wrapper, line);
         wrapper.appendChild(line);
       });
 
-      const targets = ref.current.querySelectorAll(".line > span");
+      const targets = el.querySelectorAll(".line > span");
       const { gsap } = await import("gsap");
       gsap.set(targets, { y: fromY, opacity: 0 });
 
@@ -92,16 +91,23 @@ function CopyReveal({
         duration: 1,
         ease: "power4.out",
         stagger: 0.02,
-        scrollTrigger: { trigger: ref.current, start, once: true },
+        scrollTrigger: { trigger: el, start, once: true },
       });
-
-      return () => {
-        try {
-          (split as any)?.revert?.();
-        } catch {}
-      };
     })();
-  }, [fromY, start]);
+
+    // ✅ cleanup sicuro
+    return () => {
+      try {
+        splitInstance?.revert?.();
+      } catch {}
+      // Kill eventuali ScrollTrigger legati all'elemento
+      if ((window as any).ScrollTrigger) {
+        (ScrollTrigger as any).getAll?.()
+          ?.filter((t: any) => t.trigger === ref.current)
+          ?.forEach((t: any) => t.kill());
+      }
+    };
+  }, [fromY, start, ScrollTrigger]);
 
   return (
     <div ref={ref} className={className}>
@@ -184,7 +190,7 @@ export default function ProjectClient({ slug }: { slug: string }) {
     }
   }, [project, gsap, ScrollTrigger]);
 
-  // ---- SCROLL DOWN → NEXT (bidirezionale VT + GSAP) ----
+  // ---- SCROLL DOWN → NEXT ----
   useEffect(() => {
     if (!nextRef.current) return;
 
@@ -208,7 +214,7 @@ export default function ProjectClient({ slug }: { slug: string }) {
     return () => trigger.kill();
   }, [router, next.slug, next.title, gsap, ScrollTrigger]);
 
-  // ---- SCROLL UP in cima → PREV (wheel / touch / key) ----
+  // ---- SCROLL UP → PREV ----
   useEffect(() => {
     let touchStartY = 0;
     let wheelCooldown = false;
@@ -216,7 +222,7 @@ export default function ProjectClient({ slug }: { slug: string }) {
 
     const goPrev = async () => {
       if (pushedRef.current) return;
-      if (document.body.style.overflow === "hidden") return; // già in transizione
+      if (document.body.style.overflow === "hidden") return;
       pushedRef.current = true;
 
       await navigateProjectWithTransition({
@@ -273,7 +279,6 @@ export default function ProjectClient({ slug }: { slug: string }) {
 
   /* --------- build stream: interleave immagini e copy sul lato destro --------- */
   const rightStream = useMemo(() => {
-    // alterna: img, testo, img, testo... dove disponibile
     const items: Array<
       | { type: "image"; src: string; alt: string }
       | { type: "copy"; text: string; key: string }
@@ -286,10 +291,7 @@ export default function ProjectClient({ slug }: { slug: string }) {
         items.push({
           type: "image",
           src: typeof gi === "string" ? gi : gi.src,
-          alt:
-            typeof gi === "string"
-              ? project.title
-              : gi.alt ?? project.title,
+          alt: typeof gi === "string" ? project.title : gi.alt ?? project.title,
         });
       }
       if (extraCopy[i]) {
@@ -301,7 +303,7 @@ export default function ProjectClient({ slug }: { slug: string }) {
 
   return (
     <div ref={rootRef} className="min-h-screen" data-page>
-      {/* Overlay transizione – dinamico nel titolo (escluso da VT) */}
+      {/* Overlay transizione */}
       <div
         ref={overlayRef}
         className="fixed inset-0 z-[999] opacity-0 pointer-events-none bg-gradient-to-t from-black via-neutral-950 to-black vt-static"
@@ -314,7 +316,7 @@ export default function ProjectClient({ slug }: { slug: string }) {
         </div>
       </div>
 
-      {/* Header: Title + Period + Hero */}
+      {/* Header */}
       <div className="mx-auto max-w-5xl px-6">
         <div className="mx-auto mb-6 mt-8 w-full max-w-3xl text-center">
           <h1 className="pj-title text-5xl font-semibold md:text-6xl">{project.title}</h1>
@@ -325,19 +327,12 @@ export default function ProjectClient({ slug }: { slug: string }) {
 
         {heroSrc && (
           <div className="pj-img-clip relative mb-16 h-[65vh] overflow-hidden rounded-2xl border border-white/10">
-            <Image
-              src={heroSrc}
-              alt={heroAlt || ""}
-              fill
-              className="object-cover"
-              priority
-              // style={{ viewTransitionName: `hero-${project.slug}` }}
-            />
+            <Image src={heroSrc} alt={heroAlt || ""} fill className="object-cover" priority />
           </div>
         )}
       </div>
 
-      {/* Body: 2 colonne — sinistra sticky (descrizione + tech + CTA), destra stream scroll */}
+      {/* Body */}
       <div className="mx-auto grid max-w-6xl grid-cols-1 gap-10 px-6 md:grid-cols-12">
         {/* LEFT (sticky) */}
         <aside className="md:col-span-4 md:sticky md:top-24 md:self-start">
@@ -367,18 +362,17 @@ export default function ProjectClient({ slug }: { slug: string }) {
 
           {/* View Live */}
           {(project as any).liveUrl && (
-  <div className="mt-8">
-    <AnimatedButton
-      label="View Live"
-      hoverLabel="Open"
-      size="md"
-      onClick={() => {
-        const url = (project as any).liveUrl as string;
-        // nuova tab + rel per sicurezza
-        window.open(url, "_blank", "noopener,noreferrer");
-      }}
-    />
-  </div>
+            <div className="mt-8">
+              <AnimatedButton
+                label="View Live"
+                hoverLabel="Open"
+                size="md"
+                onClick={() => {
+                  const url = (project as any).liveUrl as string;
+                  window.open(url, "_blank", "noopener,noreferrer");
+                }}
+              />
+            </div>
           )}
         </aside>
 

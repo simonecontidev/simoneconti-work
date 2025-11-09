@@ -6,9 +6,6 @@ import Image from "next/image";
 import styles from "./ScrollShowcase.module.css";
 import type { ScrollShowcaseProps } from "./types";
 
-import ScrollImageReveal from "../../components/ScrollImageReveal/ScrollImageReveal";
-
-
 export default function ScrollShowcase({
   hero,
   outro,
@@ -99,7 +96,13 @@ export default function ScrollShowcase({
       cleanupCtx?.();
       // Lenis non viene gestito qui: usa quello del Provider
     };
-  }, [options?.breakpoint, options?.minScale, options?.minScaleMobile, options?.pinMultiplier, options?.enableSmooth]);
+  }, [
+    options?.breakpoint,
+    options?.minScale,
+    options?.minScaleMobile,
+    options?.pinMultiplier,
+    options?.enableSmooth,
+  ]);
 
   const trio = services.slice(0, 3); // garantisce 3 righe
 
