@@ -149,7 +149,8 @@ export default function AboutPage() {
 
       const setupTitle = (el: HTMLElement | null, delay = 0) => {
         if (!el) return;
-        const split = new SplitType(el, { types: "lines, words" });
+        // niente spazio dopo la virgola
+        const split = new SplitType(el, { types: "lines,words" });
         (el as any).split = split;
         const lines = split.lines as HTMLElement[];
         gsap.set(lines, { yPercent: 100, opacity: 0, skewY: 8, transformOrigin: "left bottom" });
@@ -206,8 +207,10 @@ export default function AboutPage() {
             transformStyle: "preserve-3d",
           });
         };
-        const onLeave = () =>
+        // ✅ non ritorna il Tween
+        const onLeave = () => {
           gsap.to(card, { rotateX: 0, rotateY: 0, x: 0, y: 0, duration: 0.8, ease: "power3.out" });
+        };
 
         wrap.addEventListener("mousemove", onMove);
         wrap.addEventListener("mouseleave", onLeave);
@@ -389,15 +392,16 @@ export default function AboutPage() {
 
       <Spotlight />
       <CTACard />
+
+      {/* Safe override per evitare flash sul primo titolo */}
+      <style jsx global>{`
+        #s-hero .line-wrapper,
+        #s-hero .line-wrapper .line,
+        #s-hero h1 {
+          opacity: 1 !important;
+          transform: none !important;
+        }
+      `}</style>
     </div>
   );
 }
-
-<style jsx global>{`
-  #s-hero .line-wrapper,
-  #s-hero .line-wrapper .line,
-  #s-hero h1 {
-    opacity: 1 !important;
-    transform: none !important;
-  }
-`}</style>

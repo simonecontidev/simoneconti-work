@@ -33,11 +33,18 @@ export default function SliderHero({
   // swipe refs
   const pointerActive = useRef(false);
   const startX = useRef(0);
+  const startY = useRef(0);
   const lastX = useRef(0);
 
   // responsive line-heights (measured)
   const titleLHRef = useRef<number>(60);
   const counterLHRef = useRef<number>(20);
+
+  // reduced motion
+  const prefersReducedMotion =
+    typeof window !== "undefined" &&
+    window.matchMedia &&
+    window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
   useEffect(() => {
     gsap.registerPlugin(CustomEase);
@@ -79,11 +86,12 @@ export default function SliderHero({
       document.fonts.ready.then(measure).catch(() => {});
     }
     const onResize = () => measure();
-    window.addEventListener("resize", onResize);
+    window.addEventListener("resize", onResize, { passive: true });
     return () => window.removeEventListener("resize", onResize);
   }, [titles, total]);
 
-  const DURATION = 1.2; // seconds
+  const DURATION = prefersReducedMotion ? 0.3 : 1.1; // leggermente più snello
+  const EASE = prefersReducedMotion ? "power1.out" : "hop";
 
   // ---- UI shifts (counter & titles) + title active fx ----
   const updateUI = (idx: number) => {
@@ -96,15 +104,16 @@ export default function SliderHero({
     const titleStep = titleLHRef.current || 60;
 
     gsap.killTweensOf([counter, titlesWrap, ...titleEls]);
-    gsap.to(counter, { y: -counterStep * idx, duration: DURATION, ease: "hop" });
-    gsap.to(titlesWrap, { y: -titleStep * idx, duration: DURATION, ease: "hop" });
+
+    gsap.to(counter, { y: -counterStep * idx, duration: DURATION, ease: EASE });
+    gsap.to(titlesWrap, { y: -titleStep * idx, duration: DURATION, ease: EASE });
 
     const activeTitle = titleEls[idx];
     if (activeTitle) {
       gsap.fromTo(
         activeTitle,
-        { opacity: 0, y: Math.min(10, titleStep * 0.2), scale: 0.98 },
-        { opacity: 1, y: 0, scale: 1, duration: DURATION * 0.7, ease: "hop" }
+        { opacity: 0, y: Math.min(10, titleStep * 0.2), scale: 0.985 },
+        { opacity: 1, y: 0, scale: 1, duration: DURATION * 0.7, ease: EASE }
       );
     }
   };
@@ -114,7 +123,7 @@ export default function SliderHero({
     const indicators = rootRef.current.querySelectorAll(".sh-indicators p");
     indicatorRotation.current += dir === "left" ? -90 : 90;
     gsap.killTweensOf(indicators);
-    gsap.to(indicators, { rotate: indicatorRotation.current, duration: DURATION * 0.6, ease: "hop" });
+    gsap.to(indicators, { rotate: indicatorRotation.current, duration: DURATION * 0.6, ease: EASE });
   };
 
   const navTo = (target: number) => {
@@ -152,7 +161,7 @@ export default function SliderHero({
 
     isAnimatingRef.current = true;
 
-    const tl = gsap.timeline({ defaults: { ease: "hop" } });
+    const tl = gsap.timeline({ defaults: { ease: EASE } });
     tlRef.current = tl;
 
     tl.to(currentImg, { x: dir === "left" ? 260 : -260, duration: DURATION }, 0)
@@ -207,8 +216,9 @@ export default function SliderHero({
       }
 
       // left/right halves
+      if (!slider) return;
       const rect = slider.getBoundingClientRect();
-      const x = e.clientX - rect.left;
+      const x = (e as MouseEvent).clientX - rect.left;
       if (x < rect.width / 2) goLeft();
       else goRight();
     };
@@ -236,7 +246,12 @@ export default function SliderHero({
     const onDown = (e: PointerEvent) => {
       pointerActive.current = true;
       startX.current = e.clientX;
+      startY.current = e.clientY;
       lastX.current = e.clientX;
+      // Evita drag dell'immagine
+      (e.target as HTMLElement)?.closest("img")?.addEventListener("dragstart", (ev) => {
+        ev.preventDefault();
+      }, { once: true });
       slider.setPointerCapture(e.pointerId);
     };
     const onMove = (e: PointerEvent) => {
@@ -248,22 +263,31 @@ export default function SliderHero({
       pointerActive.current = false;
       slider.releasePointerCapture(e.pointerId);
       const dx = lastX.current - startX.current;
-      const threshold = (slider.clientWidth || window.innerWidth) * 0.09;
+      const dy = e.clientY - startY.current;
+
+      // Se l'utente ha mosso quasi solo in verticale, non cambiare slide
+      if (Math.abs(dy) > Math.abs(dx) * 1.2) return;
+
+      // Soglia swipe: ~9% desktop, ~6% mobile
+      const base = (slider.clientWidth || window.innerWidth);
+      const threshold = base * (window.innerWidth < 560 ? 0.06 : 0.09);
       if (Math.abs(dx) > threshold) {
         dx < 0 ? goRight() : goLeft();
       }
     };
 
-    slider.addEventListener("pointerdown", onDown);
-    slider.addEventListener("pointermove", onMove);
+    slider.addEventListener("pointerdown", onDown, { passive: true });
+    slider.addEventListener("pointermove", onMove, { passive: true });
     slider.addEventListener("pointerup", onUp);
     slider.addEventListener("pointercancel", onUp);
+    slider.addEventListener("pointerleave", onUp);
 
     return () => {
       slider.removeEventListener("pointerdown", onDown);
       slider.removeEventListener("pointermove", onMove);
       slider.removeEventListener("pointerup", onUp);
       slider.removeEventListener("pointercancel", onUp);
+      slider.removeEventListener("pointerleave", onUp);
     };
   }, [curr, total]);
 
@@ -280,6 +304,10 @@ export default function SliderHero({
       ]
         .filter(Boolean)
         .join(" ")}
+      role="region"
+      aria-roledescription="carousel"
+      aria-label="Hero slider"
+      aria-live="polite"
     >
       {/* opzionale: font per i testi del componente */}
       <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -289,29 +317,42 @@ export default function SliderHero({
         rel="stylesheet"
       />
 
-      <div className="sh-slider">
-        <div className="sh-images">
+      <div className="sh-slider" tabIndex={0}>
+        <div className="sh-images" aria-live="off">
           <div className="sh-img" ref={currentLayerRef}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={firstSrc} alt="" />
+            <img
+              src={firstSrc}
+              alt=""
+              draggable={false}
+              decoding="async"
+              fetchpriority="high"
+            />
           </div>
-          <div className="sh-img" ref={nextLayerRef}>
+          <div className="sh-img" ref={nextLayerRef} aria-hidden="true">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={firstSrc} alt="" />
+            <img
+              src={firstSrc}
+              alt=""
+              draggable={false}
+              decoding="async"
+            />
           </div>
         </div>
 
         {/* Title */}
-        <div className="sh-title">
+        <div className="sh-title" aria-live="polite">
           <div className="sh-title-wrapper">
             {titles.slice(0, total).map((t, i) => (
-              <p key={i}>{t}</p>
+              <p key={i} aria-hidden={i !== (pending ?? curr)}>
+                {t}
+              </p>
             ))}
           </div>
         </div>
 
         {/* Counter (left) */}
-        <div className="sh-counter">
+        <div className="sh-counter" aria-hidden="true">
           <div className="sh-counter-inner">
             {Array.from({ length: total }).map((_, i) => (
               <p key={i}>{i + 1}</p>
@@ -320,19 +361,35 @@ export default function SliderHero({
         </div>
 
         {/* Thumbs */}
-        <div className="sh-preview">
-          {images.slice(0, total).map((src, i) => (
-            <div key={i} className={"sh-preview-item" + (i === (pending ?? curr) ? " active" : "")}>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={src} alt="" />
-            </div>
-          ))}
+        <div className="sh-preview" role="tablist" aria-label="Slider thumbnails">
+          {images.slice(0, total).map((src, i) => {
+            const active = i === (pending ?? curr);
+            return (
+              <div
+                key={i}
+                className={"sh-preview-item" + (active ? " active" : "")}
+                role="tab"
+                aria-selected={active}
+                aria-label={`Go to slide ${i + 1}`}
+                tabIndex={active ? 0 : -1}
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={src}
+                  alt=""
+                  loading="lazy"
+                  decoding="async"
+                  draggable={false}
+                />
+              </div>
+            );
+          })}
         </div>
 
         {/* Indicators (- / +) */}
-        <div className="sh-indicators">
-          <p>-</p>
-          <p>+</p>
+        <div className="sh-indicators" aria-label="Previous/Next controls">
+          <p role="button" aria-label="Previous slide">-</p>
+          <p role="button" aria-label="Next slide">+</p>
         </div>
       </div>
 
@@ -373,11 +430,17 @@ export default function SliderHero({
           place-items: center;
           overflow: hidden;
           padding-bottom: env(safe-area-inset-bottom);
+          /* ✅ consenti scroll verticale mentre gestiamo swipe orizzontale */
+          touch-action: pan-y;
+          outline: none;
         }
         .sh-images { position: absolute; inset: 0; }
         .sh-img { position: absolute; inset: 0; overflow: hidden; }
         .sh-img img {
           width: 100%; height: 100%; object-fit: cover; display: block;
+          -webkit-user-drag: none;
+          user-drag: none;
+          pointer-events: none;
         }
 
         /* Title (uses measured line-height) */
@@ -387,13 +450,14 @@ export default function SliderHero({
           transform: translate(-50%, -50%);
           height: var(--titleLH, 60px);
           overflow: hidden; z-index: 4; text-align: center;
-          width: 100%; padding: 0 2vw;
+          width: 100%; padding: 0 4vw;
         }
         .sh-title-wrapper { display: grid; gap: 0; justify-items: center; }
         .sh-title-wrapper p {
-          font-size: clamp(22px, 6vw, 48px);
-          line-height: clamp(32px, 7.5vw, 60px);
+          font-size: clamp(22px, 6vw, 54px);
+          line-height: clamp(32px, 7.5vw, 64px);
           letter-spacing: 0.01em; margin: 0;
+          text-wrap: balance;
         }
 
         /* Counter left (uses measured line-height) */
@@ -423,11 +487,16 @@ export default function SliderHero({
           gap: 24px; padding: 0 2vw;
         }
         .sh-indicators p {
-          font-size: clamp(24px, 4.5vw, 32px);
+          font-size: clamp(24px, 4.5vw, 34px);
+          line-height: 1;
           cursor: pointer; opacity: 0.9;
           transition: opacity 0.25s ease; user-select: none; margin: 0;
+          /* ✅ tap area grande */
+          padding: 10px 14px;
+          border-radius: 12px;
         }
         .sh-indicators p:hover { opacity: 1; }
+        .sh-indicators p:active { opacity: 0.75; }
 
         .sh-preview {
           bottom: calc(max(8em, 46px) + env(safe-area-inset-bottom));
@@ -436,12 +505,16 @@ export default function SliderHero({
         }
         .sh-preview-item {
           aspect-ratio: 16 / 10; position: relative; overflow: hidden;
-          border-radius: 6px; outline: 1px solid rgba(255,255,255,0.25);
-          opacity: 0.75; transition: opacity 0.25s ease, outline-color 0.25s ease;
+          border-radius: 8px; outline: 1px solid rgba(255,255,255,0.25);
+          opacity: 0.75; transition: opacity 0.25s ease, outline-color 0.25s ease, transform 0.2s ease;
           cursor: pointer;
+          backdrop-filter: saturate(110%);
+        }
+        .sh-preview-item:focus-visible {
+          outline: 2px solid rgba(255,255,255,0.95);
         }
         .sh-preview-item img { width: 100%; height: 100%; object-fit: cover; display: block; }
-        .sh-preview-item.active { opacity: 1; outline-color: rgba(255,255,255,0.9); }
+        .sh-preview-item.active { opacity: 1; outline-color: rgba(255,255,255,0.9); transform: translateY(-1px); }
 
         /* Overlay centrati quando in modalità BLEED */
         .sh--bleed .sh-title,
@@ -457,27 +530,36 @@ export default function SliderHero({
           .sh-preview { grid-template-columns: repeat(${Math.max(3, Math.min(total, 5))}, 1fr); }
         }
         @media (max-width: 560px) {
-          .sh-title { height: var(--titleLH, 48px); width: 92vw; }
+          .sh-title { height: var(--titleLH, 52px); width: 92vw; padding: 0 2vw; }
           .sh-counter { left: 4vw; }
 
           /* thumbs in carosello orizzontale */
           .sh-preview {
             width: 92vw;
-            grid-auto-flow: column; grid-auto-columns: 48%;
+            grid-auto-flow: column; grid-auto-columns: 58%;
             grid-template-columns: unset;
             overflow-x: auto; overscroll-behavior-x: contain;
             -webkit-overflow-scrolling: touch; scroll-snap-type: x mandatory;
-            gap: 8px; padding: 0 2px; scrollbar-width: none;
+            gap: 10px; padding: 0 2px; scrollbar-width: none;
           }
           .sh-preview::-webkit-scrollbar { display: none; }
           .sh-preview-item {
             scroll-snap-align: center; aspect-ratio: 16 / 10;
-            border-radius: 8px; outline-width: 1px; opacity: 0.8;
+            border-radius: 10px; outline-width: 1px; opacity: 0.86;
           }
+
+          /* tappable area più grande anche per i bottoni */
+          .sh-indicators p { padding: 12px 16px; border-radius: 14px; }
         }
         @media (max-width: 380px) {
-          .sh-preview { grid-auto-columns: 42%; gap: 6px; }
+          .sh-preview { grid-auto-columns: 64%; gap: 8px; }
           .sh-preview-item { aspect-ratio: 16 / 11; }
+        }
+
+        /* riduci animazioni per utenti con motion ridotto */
+        @media (prefers-reduced-motion: reduce) {
+          .sh-preview-item,
+          .sh-indicators p { transition: none !important; }
         }
       `}</style>
     </div>
