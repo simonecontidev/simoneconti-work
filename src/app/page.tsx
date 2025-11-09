@@ -1,13 +1,14 @@
-// app/page.tsx (o app/portfolio/page.tsx)
+// src/app/page.tsx
 "use client";
-import HorizontalShowcase from "../../components//HorizontalShowcase/HorizontalShowcase";
+
+import HorizontalShowcase from "../../components/HorizontalShowcase/HorizontalShowcase";
 import ScrollShowcase from "../../components/sections/ScrollShowcase/ScrollShowcase";
 import SliderHero from "../../components/SliderHero/SliderHero";
 import ScrollImageReveal from "../../components/ScrollImageReveal/ScrollImageReveal";
 import HomeTextRevealSection from "../../components/HomeTextRevealSection/HomeTextRevealSection";
 
 export default function Home() {
-  // 👉 qui definisci i progetti
+  // 👉 progetti (se ti servono in futuro)
   const projects = [
     { src: "/projects/iniesta.jpg", alt: "Iniesta Academy", caption: "WordPress + WooCommerce", bgColor: "#1a1a1a" },
     { src: "/projects/guava.jpg", alt: "Guava", caption: "Shopify — custom component", bgColor: "#0f2027" },
@@ -30,21 +31,12 @@ export default function Home() {
     <main className="min-h-dvh grid place-items-center bg-black text-zinc-100">
       <SliderHero
         mode="bleed"
-        images={[
-          "/assets/img1.jpg",
-          "/assets/img2.jpg",
-          "/assets/img3.jpg",
-          "/assets/img4.jpg",
-          "/assets/img5.jpg",
-        ]}
+        images={["/assets/img1.jpg", "/assets/img2.jpg", "/assets/img3.jpg", "/assets/img4.jpg", "/assets/img5.jpg"]}
         titles={["Pet Finder", "Tropify", "Split the Bill App", "Job App", "Taskflow"]}
       />
 
       <HorizontalShowcase
-        images={[
-          "/img-1.jpg","/img-2.jpg","/img-3.jpg","/img-4.jpg",
-          "/img-5.jpg","/img-6.jpg","/img-7.jpg","/img-8.jpg",
-        ]}
+        images={["/img-1.jpg", "/img-2.jpg", "/img-3.jpg", "/img-4.jpg", "/img-5.jpg", "/img-6.jpg", "/img-7.jpg", "/img-8.jpg"]}
         slides={[
           { image: "/img-1.jpg", text: "Slide one text…" },
           { image: "/img-2.jpg", text: "Slide two text…" },
@@ -66,25 +58,31 @@ export default function Home() {
         options={{ minScale: 0.12, minScaleMobile: 0.32, breakpoint: 1000, pinMultiplier: 2, enableSmooth: true }}
       />
 
-
-  <ScrollImageReveal
-  theme="dark"
-  items={[
-    { src: "/img-1.jpg", alt: "Work 1", caption: "Neo Tropic 01", bgColor: "#faba4a" },
-    { src: "/img-2.jpg", alt: "Work 2", caption: "Neo Tropic 02", bgColor: "#bb2a26" },
-    { src: "/img-3.jpg", alt: "Work 3", caption: "Neo Tropic 03", bgColor: "#7e7d65" },
-    { src: "/img-4.jpg", alt: "Work 4", caption: "Neo Tropic 04", bgColor: "#989682" },
-    { src: "/img-5.jpg", alt: "Work 5", caption: "Neo Tropic 05", bgColor: "#22333b" },
-    { src: "/img-6.jpg", alt: "Work 6", caption: "Neo Tropic 06", bgColor: "#1b2a41" },
-  ]}
-  enableParallax
-  parallaxMode="alternate"
-  parallaxAmount={80}
-  parallaxDriftX={24}
-/>
-
-
       <HomeTextRevealSection />
+
+      {/* ✅ ScrollImageReveal: rimosso `theme` e `parallaxDriftX`.
+          Se vuoi un look dark usa `colors`. */}
+      <ScrollImageReveal
+        items={[
+          { src: "/img-1.jpg", alt: "Work 1", caption: "Neo Tropic 01", bgColor: "#faba4a" },
+          { src: "/img-2.jpg", alt: "Work 2", caption: "Neo Tropic 02", bgColor: "#bb2a26" },
+          { src: "/img-3.jpg", alt: "Work 3", caption: "Neo Tropic 03", bgColor: "#7e7d65" },
+          { src: "/img-4.jpg", alt: "Work 4", caption: "Neo Tropic 04", bgColor: "#989682" },
+          { src: "/img-5.jpg", alt: "Work 5", caption: "Neo Tropic 05", bgColor: "#22333b" },
+          { src: "/img-6.jpg", alt: "Work 6", caption: "Neo Tropic 06", bgColor: "#1b2a41" },
+        ]}
+        enableParallax
+        parallaxMode="alternate"
+        parallaxAmount={80}
+        // Look & feel scuro coerente con la pagina
+        colors={{
+          bg: "#0b0b0b",
+          text: "#ffffff",
+          textMuted: "#b3b3b3",
+          mediaBg: "#111111",
+          accentStrong: "#222222",
+        }}
+      />
     </main>
   );
 }

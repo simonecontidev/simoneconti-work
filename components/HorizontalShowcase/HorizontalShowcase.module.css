@@ -1,16 +1,17 @@
 /* ------------------------------------------
    HorizontalShowcase.module.css
-   Full-bleed layout + marquee z-index fix
+   Desktop: pin orizzontale + FLIP
+   Mobile: UNA COLONNA (stack verticale)
 -------------------------------------------*/
 .root {
   --light: #edf1e8;
   --dark: #101010;
   background-color: var(--light);
   color: #111;
-  transition: background-color 0.8s ease-out; /* smooth change */
+  transition: background-color 0.8s ease-out;
 }
 
-/* Utility: full-bleed per rompere eventuali wrapper con max-width */
+/* Utility: full-bleed */
 .bleed {
   width: 100vw;
   margin-left: calc(50% - 50vw);
@@ -25,40 +26,43 @@
 }
 
 /* -------------------------------
-   HERO / OUTRO
+   HERO
 --------------------------------*/
-.hero,
-.outro {
+.hero {
   position: relative;
   height: 100svh;
   padding: 2rem;
   display: grid;
   place-items: center;
   text-align: center;
+  background: var(--light);
+  color: #111;
 }
 
-.hero h1,
-.outro h1 {
+.hero h1 {
   width: 75%;
   margin: 0 auto;
 }
 
-.outro {
-  background-color: var(--dark);
-  color: var(--light);
-  z-index: 1;
-  position: relative;
-}
-
 /* -------------------------------
-   MARQUEE  (sopra alla sezione sotto)
+   MARQUEE
 --------------------------------*/
 .marquee {
   position: relative;
-  z-index: 100 !important;     
+  z-index: 100 !important;
   isolation: isolate;
   height: 55svh;
   overflow: hidden;
+  transform: translateZ(0);
+  background: var(--light);
+}
+
+.marquee::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: var(--light);
+  z-index: 100;
 }
 
 .marqueeWrapper {
@@ -91,15 +95,15 @@
 }
 
 /* -------------------------------
-   SEZIONE ORIZZONTALE
+   SEZIONE ORIZZONTALE (desktop)
 --------------------------------*/
 .horizontalScroll {
   position: relative;
-  z-index: 10;       /* sotto al marquee */
+  z-index: 10; /* sotto al marquee */
   height: 100svh;
   overflow: hidden;
-  background: var(--dark);
-  color: var(--light);
+  background: var(--light);
+  color: var(--dark);
 }
 
 .horizontalScrollWrapper {
@@ -121,8 +125,8 @@
 }
 
 .horizontalSlide:not(.horizontalSpacer) {
-  background-color: var(--dark);
-  color: var(--light);
+  background-color: transparent;
+  color: inherit;
 }
 
 .col {
@@ -131,21 +135,15 @@
   align-items: center;
 }
 
-.colFirst {
-  flex: 3;
-}
-
-.colSecond {
-  flex: 2;
-}
+.colFirst { flex: 3; }
+.colSecond { flex: 2; }
 
 .slideText,
-.slideImage {
-  width: 75%;
-}
+.slideImage { width: 75%; }
 
 .slideImage {
   height: 75%;
+  object-fit: cover;
 }
 
 /* -------------------------------
@@ -170,40 +168,83 @@
 }
 
 /* -------------------------------
-   RESPONSIVE
+   RESPONSIVE (mobile / tablet portrait)
+   → UNA COLONNA (stack)
 --------------------------------*/
 @media (max-width: 1000px) {
-  .hero h1,
-  .outro h1 {
+  .hero h1 {
     width: 100%;
+    font-size: clamp(1.15rem, 2.4vw + 1rem, 1.6rem);
+    line-height: 1.25;
   }
 
   .marquee {
-    height: 48svh;
+    height: 46svh;
+    background: var(--light);
+    margin-bottom: 1.25rem;
   }
+
+  .marqueeWrapper { transform: rotate(-3deg); }
 
   .marqueeImages {
     width: 320%;
-    height: 85%;
+    height: 82%;
     transform: translate(-85%, -50%);
+    gap: 0.75rem;
   }
+
+  /* 🔁 MOBILE: layout VERTICALE */
+  .horizontalScroll {
+    height: auto;                 /* niente fullscreen fisso */
+    background: var(--light);
+    color: var(--dark);
+    padding-bottom: 2rem;
+  }
+
+  .horizontalScrollWrapper {
+    width: 100%;
+    height: auto;
+    display: block;               /* niente flex orizzontale */
+    transform: none !important;
+  }
+
+  .horizontalSpacer { display: none; }
 
   .horizontalSlide {
-    padding: 4rem;
-    flex-direction: column-reverse;
-    gap: 2rem;
+    display: grid;
+    grid-template-columns: 1fr;   /* pila verticale */
+    gap: 1rem;
+    padding: 1.25rem 1rem;        /* spaziatura comoda */
+    border-top: 1px solid rgba(0,0,0,0.06);
+    background: transparent;      /* eredita il bg chiaro */
+    color: inherit;
   }
 
-  .colFirst {
-    align-items: flex-start;
+  .colFirst, .colSecond {
+    display: block;
   }
+
+  .slideText,
+  .slideImage { width: 100%; }
 
   .slideText {
-    width: 100%;
+    font-size: clamp(1rem, 1.2vw + 0.95rem, 1.1rem);
+    line-height: 1.5;
   }
 
   .slideImage {
-    width: 100%;
-    height: 100%;
+    height: auto;
+    aspect-ratio: 5 / 3;
+    object-fit: cover;
+    border-radius: 12px;
+  }
+}
+
+@media (max-width: 640px) {
+  .marquee { height: 40svh; }
+
+  .horizontalSlide {
+    padding: 1rem 0.75rem;
+    gap: 0.75rem;
   }
 }

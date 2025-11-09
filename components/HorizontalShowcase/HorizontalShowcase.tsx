@@ -47,7 +47,7 @@ export default function WonJYou(props: HorizontalShowcaseProps) {
   const selectors = useMemo(() => {
     return {
       pinnedImg: `.${s.marqueeImg}.pin img`,
-      slideTexts: `.${s.slideText}`, // tutti i testi orizzontali
+      slideTexts: `.${s.slideText}`,
     };
   }, []);
 
@@ -59,14 +59,17 @@ export default function WonJYou(props: HorizontalShowcaseProps) {
     const horizontal = horizontalRef.current!;
     const horizontalWrapper = horizontalWrapperRef.current!;
 
-    // 1) aspetta immagini
+    // Attendi decode immagini
     const imgs = Array.from(rootEl.querySelectorAll("img")) as HTMLImageElement[];
-    const ready = Promise.all(imgs.map((img) => (img.complete ? Promise.resolve() : img.decode().catch(() => {}))));
+    const ready = Promise.all(
+      imgs.map((img) => (img.complete ? Promise.resolve() : img.decode().catch(() => {})))
+    );
 
-    // clone/flip
+    // Stato clone/flip
     let pinnedMarqueeImgClone: HTMLImageElement | null = null;
     let isImgCloneActive = false;
-    let flipAnimation: gsap.core.Tween | null = null;
+    let flipAnimation: gsap.core.Animation | null = null; // compat Timeline/Tween
+    let ro: ResizeObserver | null = null;
 
     function createPinnedMarqueeImgClone() {
       if (isImgCloneActive) return;
@@ -108,166 +111,260 @@ export default function WonJYou(props: HorizontalShowcaseProps) {
       isImgCloneActive = false;
     }
 
-    let localTriggers: ScrollTrigger[] = [];
-    let ro: ResizeObserver | null = null;
+    const resetTexts = () => {
+      const textEls = Array.from(rootEl.querySelectorAll<HTMLElement>(selectors.slideTexts));
+      textEls.forEach((el) => {
+        el.classList.remove(s.textVisible);
+        el.classList.add(s.textHidden);
+        el.style.opacity = "0";
+        gsap.set(el, { clearProps: "y,opacity" });
+      });
+    };
 
     ready.then(() => {
-      // MARQUEE (x percentuale)
-      const stMarquee = ScrollTrigger.create({
-        trigger: marquee,
-        start: "top bottom",
-        end: "top top",
-        scrub: true,
-        onUpdate: (self) => {
-          // muoviamo da -80% a ~-55% (range 25%)
-          const xPosition = -80 + self.progress * 25;
-          gsap.set(marqueeImages, { x: `${xPosition}%` });
-        },
-      });
-      localTriggers.push(stMarquee);
+      ScrollTrigger.matchMedia({
+        // =================== DESKTOP / TABLET LANDSCAPE ===================
+        "(min-width: 1001px)": () => {
+          const localTriggers: ScrollTrigger[] = [];
 
-      // PIN ORIZZONTALE
-      const stPin = ScrollTrigger.create({
-        trigger: horizontal,
-        start: "top top",
-        end: () => `+=${window.innerHeight * 5}`,
-        pin: true,
-        anticipatePin: 1,
-      });
-      localTriggers.push(stPin);
-
-      // CLONE ON ENTER/LEAVE
-      const stClone = ScrollTrigger.create({
-        trigger: marquee,
-        start: "top top",
-        onEnter: createPinnedMarqueeImgClone,
-        onEnterBack: createPinnedMarqueeImgClone,
-        onLeaveBack: removePinnedMarqueeImgClone,
-      });
-      localTriggers.push(stClone);
-
-      // TESTI orizzontali: preparazione (nascosti all’inizio)
-      const textEls = Array.from(rootEl.querySelectorAll<HTMLElement>(selectors.slideTexts));
-      textEls.forEach((el) => el.classList.add(s.textHidden));
-
-      // FLIP + wrapper + REVEAL TESTO
-      const stFlip = ScrollTrigger.create({
-        trigger: horizontal,
-        start: "top 50%",
-        end: () => `+=${window.innerHeight * 5.5}`,
-        onEnter: () => {
-          if (pinnedMarqueeImgClone && isImgCloneActive && !flipAnimation) {
-            const state = Flip.getState(pinnedMarqueeImgClone);
-            gsap.set(pinnedMarqueeImgClone, {
-              position: "fixed",
-              left: "0px",
-              top: "0px",
-              width: "100%",
-              height: "100svh",
-              transform: "rotate(0deg)",
-              transformOrigin: "center center",
-            });
-            flipAnimation = Flip.from(state, {
-              duration: 1,
-              ease: "none",
-              paused: true,
-            });
-          }
-        },
-        onLeaveBack: () => {
-          if (flipAnimation) {
-            flipAnimation.kill();
-            flipAnimation = null;
-          }
-          gsap.set(container, { backgroundColor: "var(--light)" });
-          gsap.set(horizontalWrapper, { x: "0%" });
-          textEls.forEach((el) => {
-            el.classList.remove(s.textVisible);
-            el.classList.add(s.textHidden);
-            el.style.opacity = "0";
+          // Marquee: traslazione percentuale
+          const stMarquee = ScrollTrigger.create({
+            trigger: marquee,
+            start: "top bottom",
+            end: "top top",
+            scrub: 1,
+            onUpdate: (self) => {
+              const xPosition = -80 + self.progress * 25; // -80% → -55%
+              gsap.set(marqueeImages, { x: `${xPosition}%` });
+            },
           });
-        },
-        onUpdate: (self) => {
-          const progress = self.progress;
+          localTriggers.push(stMarquee);
 
-          // bg light -> dark
-          if (progress <= 0.05) {
-            const bgp = Math.min(progress / 0.05, 1);
-            const light = getComputedStyle(container).getPropertyValue("--light").trim();
-            const dark = getComputedStyle(container).getPropertyValue("--dark").trim();
-            const c = (p: number) => gsap.utils.interpolate(light, dark, Math.max(0, Math.min(1, p)));
-            gsap.set(container, { backgroundColor: c(bgp) });
-          } else {
-            gsap.set(container, { backgroundColor: "var(--dark)" });
-          }
+          // Pin orizzontale
+          const stPin = ScrollTrigger.create({
+            trigger: horizontal,
+            start: "top top",
+            end: () => `+=${window.innerHeight * 5}`,
+            pin: true,
+            anticipatePin: 1,
+          });
+          localTriggers.push(stPin);
 
-          // FLIP 0 → 0.2
-          if (progress <= 0.2) {
-            const sp = progress / 0.2;
-            if (flipAnimation) flipAnimation.progress(sp);
-          }
+          // Clone on enter/leave
+          const stClone = ScrollTrigger.create({
+            trigger: marquee,
+            start: "top top",
+            onEnter: createPinnedMarqueeImgClone,
+            onEnterBack: createPinnedMarqueeImgClone,
+            onLeaveBack: removePinnedMarqueeImgClone,
+          });
+          localTriggers.push(stClone);
 
-          // SCROLL ORIZZONTALE + REVEAL TESTO (dopo 0.28)
-          if (progress > 0.2 && progress <= 0.95) {
-            if (flipAnimation) flipAnimation.progress(1);
-            const hp = (progress - 0.2) / 0.75;
-            const wrapperX = -66.67 * hp;
-            gsap.set(horizontalWrapper, { x: `${wrapperX}%` });
+          resetTexts();
+          const textEls = Array.from(rootEl.querySelectorAll<HTMLElement>(selectors.slideTexts));
 
-            if (pinnedMarqueeImgClone) {
-              const slideMovement = (66.67 / 100) * 3 * hp;
-              gsap.set(pinnedMarqueeImgClone, { x: `${-slideMovement * 100}%` });
-            }
-
-            // Testo: inizia a svelarsi solo quando l'immagine è "full"
-            const startReveal = 0.28;
-            const endReveal = 0.38;
-            if (progress < startReveal) {
+          // Flip + wrapper + reveal + bg sync
+          const stFlip = ScrollTrigger.create({
+            trigger: horizontal,
+            start: "top 50%",
+            end: () => `+=${window.innerHeight * 5.5}`,
+            onEnter: () => {
+              if (pinnedMarqueeImgClone && isImgCloneActive && !flipAnimation) {
+                const state = Flip.getState(pinnedMarqueeImgClone);
+                gsap.set(pinnedMarqueeImgClone, {
+                  position: "fixed",
+                  left: 0,
+                  top: 0,
+                  width: "100%",
+                  height: "100svh",
+                  transform: "rotate(0deg)",
+                  transformOrigin: "center center",
+                });
+                flipAnimation = Flip.from(state, { duration: 1, ease: "none", paused: true });
+              }
+            },
+            onLeaveBack: () => {
+              if (flipAnimation) { flipAnimation.kill(); flipAnimation = null; }
+              gsap.set(container, { backgroundColor: "var(--light)" });
+              gsap.set(horizontal, { backgroundColor: "var(--light)", color: "var(--dark)" });
+              gsap.set(horizontalWrapper, { x: "0%" });
               textEls.forEach((el) => {
                 el.classList.remove(s.textVisible);
                 el.classList.add(s.textHidden);
                 el.style.opacity = "0";
               });
-            } else if (progress >= startReveal && progress <= endReveal) {
-              const t = (progress - startReveal) / (endReveal - startReveal); // 0..1
-              textEls.forEach((el) => {
-                el.classList.remove(s.textHidden);
-                el.classList.add(s.textVisible);
-                el.style.opacity = String(t);
-              });
-            } else {
-              textEls.forEach((el) => {
-                el.classList.remove(s.textHidden);
-                el.classList.add(s.textVisible);
-                el.style.opacity = "1";
-              });
-            }
-          } else if (progress > 0.95) {
-            if (flipAnimation) flipAnimation.progress(1);
-            if (pinnedMarqueeImgClone) gsap.set(pinnedMarqueeImgClone, { x: "-200%" });
-            gsap.set(horizontalWrapper, { x: "-66.67%" });
-            textEls.forEach((el) => {
-              el.classList.remove(s.textHidden);
-              el.classList.add(s.textVisible);
-              el.style.opacity = "1";
+            },
+            onUpdate: (self) => {
+              const progress = self.progress;
+
+              // Sezione orizzontale: chiaro → scuro
+              if (progress <= 0.05) {
+                gsap.set(horizontal, { backgroundColor: "var(--light)", color: "var(--dark)" });
+              } else {
+                gsap.set(horizontal, { backgroundColor: "var(--dark)", color: "var(--light)" });
+              }
+
+              // Hero bg light → dark
+              if (progress <= 0.05) {
+                const bgp = Math.min(progress / 0.05, 1);
+                const light = getComputedStyle(container).getPropertyValue("--light").trim();
+                const dark = getComputedStyle(container).getPropertyValue("--dark").trim();
+                const c = (p: number) => gsap.utils.interpolate(light, dark, Math.max(0, Math.min(1, p)));
+                gsap.set(container, { backgroundColor: c(bgp) });
+              } else {
+                gsap.set(container, { backgroundColor: "var(--dark)" });
+              }
+
+              // FLIP 0 → 0.2
+              if (progress <= 0.2) {
+                const sp = progress / 0.2;
+                if (flipAnimation) flipAnimation.progress(sp);
+              }
+
+              // Orizzontale + testo
+              if (progress > 0.2 && progress <= 0.95) {
+                if (flipAnimation) flipAnimation.progress(1);
+                const hp = (progress - 0.2) / 0.75;
+                const wrapperX = -66.67 * hp;
+                gsap.set(horizontalWrapper, { x: `${wrapperX}%` });
+
+                if (pinnedMarqueeImgClone) {
+                  const slideMovement = (66.67 / 100) * 3 * hp;
+                  gsap.set(pinnedMarqueeImgClone, { x: `${-slideMovement * 100}%` });
+                }
+
+                const startReveal = 0.28;
+                const endReveal = 0.38;
+                if (progress < startReveal) {
+                  textEls.forEach((el) => {
+                    el.classList.remove(s.textVisible);
+                    el.classList.add(s.textHidden);
+                    el.style.opacity = "0";
+                  });
+                } else if (progress <= endReveal) {
+                  const t = (progress - startReveal) / (endReveal - startReveal);
+                  textEls.forEach((el) => {
+                    el.classList.remove(s.textHidden);
+                    el.classList.add(s.textVisible);
+                    el.style.opacity = String(t);
+                  });
+                } else {
+                  textEls.forEach((el) => {
+                    el.classList.remove(s.textHidden);
+                    el.classList.add(s.textVisible);
+                    el.style.opacity = "1";
+                  });
+                }
+              } else if (progress > 0.95) {
+                if (flipAnimation) flipAnimation.progress(1);
+                // 🔧 FIX QUI: NESSUNA doppia virgoletta
+                if (pinnedMarqueeImgClone) gsap.set(pinnedMarqueeImgClone, { x: "-200%" });
+                gsap.set(horizontalWrapper, { x: "-66.67%" });
+                textEls.forEach((el) => {
+                  el.classList.remove(s.textHidden);
+                  el.classList.add(s.textVisible);
+                  el.style.opacity = "1";
+                });
+              }
+            },
+          });
+          localTriggers.push(stFlip);
+
+          // Refresh stabile
+          ro = new ResizeObserver(() => ScrollTrigger.refresh());
+          ro.observe(rootEl);
+          ScrollTrigger.refresh();
+
+          // cleanup desktop
+          return () => {
+            localTriggers.forEach((st) => st.kill());
+            ro?.disconnect();
+          };
+        },
+
+        // =================== MOBILE / TABLET PORTRAIT ===================
+        "(max-width: 1000px)": () => {
+          // Mobile: una colonna, niente pin/flip, fade-in leggero
+          removePinnedMarqueeImgClone();
+          flipAnimation?.kill(); flipAnimation = null;
+
+          gsap.set(container,  { backgroundColor: "var(--light)" });
+          gsap.set(horizontal, { backgroundColor: "var(--light)", color: "var(--dark)" });
+          gsap.set(horizontalWrapper, { x: "0%" });
+
+          resetTexts();
+
+          const slides = Array.from(
+            horizontalWrapper.querySelectorAll<HTMLElement>(`.${s.horizontalSlide}`)
+          ).filter((el) => !el.classList.contains(s.horizontalSpacer));
+
+          // Fade-in per ogni slide
+          slides.forEach((slide) => {
+            gsap.fromTo(
+              slide,
+              { autoAlpha: 0, y: 24 },
+              {
+                autoAlpha: 1,
+                y: 0,
+                duration: 0.6,
+                ease: "power2.out",
+                scrollTrigger: {
+                  trigger: slide,
+                  start: "top 85%",
+                  end: "bottom 60%",
+                  toggleActions: "play none none reverse",
+                },
+              }
+            );
+          });
+
+          // Fade-in dei testi
+          const textEls = Array.from(rootEl.querySelectorAll<HTMLElement>(selectors.slideTexts));
+          textEls.forEach((el) => {
+            gsap.fromTo(
+              el,
+              { autoAlpha: 0, y: 12 },
+              {
+                autoAlpha: 1,
+                y: 0,
+                duration: 0.5,
+                ease: "power2.out",
+                delay: 0.05,
+                scrollTrigger: {
+                  trigger: el,
+                  start: "top 90%",
+                  toggleActions: "play none none reverse",
+                },
+              }
+            );
+          });
+
+          ScrollTrigger.refresh();
+
+          // cleanup mobile
+          return () => {
+            ScrollTrigger.getAll().forEach((st) => {
+              const trg = st.vars?.trigger as HTMLElement | undefined;
+              if (trg && trg.closest(`.${s.root}`)) st.kill();
             });
-          }
+          };
         },
       });
-      localTriggers.push(stFlip);
 
-      // Refresh stabile
-      ro = new ResizeObserver(() => ScrollTrigger.refresh());
-      ro.observe(rootEl);
+      // Primo refresh generale
       ScrollTrigger.refresh();
     });
 
+    // cleanup generale
     return () => {
       removePinnedMarqueeImgClone();
       ro?.disconnect();
-      localTriggers.forEach((st) => st.kill());
+      ScrollTrigger.getAll().forEach((st) => {
+        const trg = st.vars?.trigger as HTMLElement | undefined;
+        if (trg && trg.closest(`.${s.root}`)) st.kill();
+      });
     };
-  }, [IMAGES.join("|"), SLIDES.map((s) => s.image).join("|"), pinIndex, selectors.pinnedImg, selectors.slideTexts]);
+  }, [IMAGES.join("|"), SLIDES.map((sl) => sl.image).join("|"), pinIndex, selectors.pinnedImg, selectors.slideTexts]);
 
   return (
     <div ref={rootRef} className={s.root}>
@@ -292,7 +389,7 @@ export default function WonJYou(props: HorizontalShowcaseProps) {
         </div>
       </section>
 
-      {/* ORIZZONTALE (full-bleed) */}
+      {/* ORIZZONTALE (desktop) / STACK VERTICALE (mobile) */}
       <section ref={horizontalRef} className={`${s.horizontalScroll} ${s.bleed}`}>
         <div ref={horizontalWrapperRef} className={`${s.horizontalScrollWrapper} ${s.gpuLayer}`}>
           <div className={`${s.horizontalSlide} ${s.horizontalSpacer}`} />
@@ -308,14 +405,6 @@ export default function WonJYou(props: HorizontalShowcaseProps) {
           ))}
         </div>
       </section>
-
-      {/* OUTRO (full-bleed) 
-      <section className={`${s.outro} ${s.bleed}`}>
-        <h1>
-          Shadows fold into light. Shapes shift across the frame, reminding us
-          that stillness is only temporary.
-        </h1>
-      </section>*/}
     </div>
   );
 }
