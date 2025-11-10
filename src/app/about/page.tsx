@@ -280,7 +280,7 @@ export default function AboutPage() {
             className={`${styles.card} ${styles.cardGlow} mx-auto mb-12 w-1/3 overflow-hidden md:mb-16`}
           >
             <Image
-              src="/about/portrait.jpg"
+              src="/img-2.jpg"
               alt="Portrait"
               width={1200}
               height={1600}
@@ -311,7 +311,7 @@ export default function AboutPage() {
         className={`${styles.card} ${styles.jsSection} mx-auto my-24 overflow-hidden`}
       >
         <Image
-          src="/about/portrait.jpg"
+          src="/assets/img3.jpg"
           alt="Studio"
           width={2400}
           height={1200}

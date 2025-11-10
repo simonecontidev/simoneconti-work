@@ -24,6 +24,28 @@ export default function ScrollShowcase({
       const { ScrollTrigger } = await import("gsap/ScrollTrigger");
       gsap.registerPlugin(ScrollTrigger);
 
+      const root = rootRef.current;
+      if (!root) return;
+
+      const setOverlapVar = () => {
+        const headers = Array.from(
+          root.querySelectorAll<HTMLElement>(`.${styles.ssServicesHeader}`)
+        );
+        if (headers.length === 0) return;
+
+        // Altezza “finale” quando le header sono compresse (minScale)
+        const bp = options?.breakpoint ?? 1000;
+        const minScale =
+          window.innerWidth <= bp
+            ? options?.minScaleMobile ?? 0.3
+            : options?.minScale ?? 0.1;
+
+        // Usiamo l’altezza della prima header come riferimento
+        const h = headers[0].getBoundingClientRect().height;
+        const overlap = Math.max(0, Math.round(h * minScale));
+        root.style.setProperty("--ss-overlap", `${overlap}px`);
+      };
+
       const ctx = gsap.context(() => {
         // TEXT REVEAL
         const texts = gsap.utils.toArray<HTMLElement>(`.${styles.ssAnimateText}`);
@@ -34,6 +56,7 @@ export default function ScrollShowcase({
             start: "top 50%",
             end: "bottom 50%",
             scrub: 1,
+            invalidateOnRefresh: true,
             onUpdate: (self) => {
               const clipValue = Math.max(0, 100 - self.progress * 100);
               el.style.setProperty("--clip-value", `${clipValue}%`);
@@ -49,6 +72,7 @@ export default function ScrollShowcase({
           start: "top bottom",
           end: "top top",
           scrub: 1,
+          invalidateOnRefresh: true,
           onUpdate: (self) => {
             if (headers.length < 3) return;
             gsap.set(headers[0], { x: `${100 - self.progress * 100}%` });
@@ -61,10 +85,13 @@ export default function ScrollShowcase({
         ScrollTrigger.create({
           trigger: `.${styles.ssServices}`,
           start: "top top",
-          end: `+=${window.innerHeight * (options?.pinMultiplier ?? 2)}`,
+          end: () => `+=${window.innerHeight * (options?.pinMultiplier ?? 2)}`,
           pin: true,
+          pinSpacing: true,      // lo spazio resta nel flow
+          anticipatePin: 1,
           scrub: 1,
-          pinSpacing: false,
+          invalidateOnRefresh: true,
+          onRefreshInit: setOverlapVar, // aggiorna overlap PRIMA del refresh
           onUpdate: (self) => {
             if (headers.length < 3) return;
 
@@ -87,14 +114,24 @@ export default function ScrollShowcase({
             }
           },
         });
-      }, rootRef);
+
+        // Aggiorna overlap anche su resize
+        const ro = new ResizeObserver(() => {
+          setOverlapVar();
+          ScrollTrigger.refresh();
+        });
+        ro.observe(root);
+      }, root);
+
+      // Primo calcolo + refresh
+      setOverlapVar();
+      requestAnimationFrame(() => ScrollTrigger.refresh());
 
       cleanupCtx = () => ctx.revert();
     })();
 
     return () => {
       cleanupCtx?.();
-      // Lenis non viene gestito qui: usa quello del Provider
     };
   }, [
     options?.breakpoint,
@@ -104,17 +141,10 @@ export default function ScrollShowcase({
     options?.enableSmooth,
   ]);
 
-  const trio = services.slice(0, 3); // garantisce 3 righe
+  const trio = services.slice(0, 3);
 
   return (
     <div ref={rootRef} className={styles.ssRoot}>
-      {/* HERO 
-      <section className={styles.ssHero}>
-        <div className={styles.ssHeroMedia}>
-          <Image src={hero.src} alt={hero.alt ?? "Hero"} fill sizes="300px" priority />
-        </div>
-      </section>*/}
-
       {/* ABOUT */}
       <section className={styles.ssAbout}>
         <h1 className={styles.ssAnimateText}>{aboutText}</h1>
@@ -129,17 +159,10 @@ export default function ScrollShowcase({
         ))}
       </section>
 
-      {/* COPY */}
+      {/* COPY: “appoggiato” agli SVG */}
       <section className={styles.ssServicesCopy}>
         <h1 className={styles.ssAnimateText}>{copyText}</h1>
       </section>
-
-      {/* OUTRO 
-      <section className={styles.ssOutro}>
-        <div className={styles.ssOutroMedia}>
-          <Image src={outro.src} alt={outro.alt ?? "Outro"} fill sizes="300px" />
-        </div>
-      </section>*/}
     </div>
   );
 }

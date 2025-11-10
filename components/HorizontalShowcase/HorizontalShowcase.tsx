@@ -1,3 +1,4 @@
+// components/HorizontalShowcase/HorizontalShowcase.tsx
 "use client";
 
 import { useLayoutEffect, useMemo, useRef } from "react";
@@ -20,19 +21,11 @@ const DEFAULT_IMAGES = [
 ];
 
 const DEFAULT_SLIDES = [
-  {
-    image: "/slide-1.jpg",
-    text:
-      "A landscape in constant transition, where every shape, sound, and shadow refuses to stay still. What seems stable begins to dissolve, and what fades returns again in a new form.",
-  },
-  {
-    image: "/slide-2.jpg",
-    text:
-      "The rhythm of motion carries us forward into spaces that feel familiar yet remain undefined. Each shift is subtle, yet together they remind us that nothing we see is ever permanent.",
-  },
+  { image: "/slide-1.jpg", text: "A landscape in constant transition..." },
+  { image: "/slide-2.jpg", text: "The rhythm of motion carries us forward..." },
 ];
 
-export default function WonJYou(props: HorizontalShowcaseProps) {
+export default function HorizontalShowcase(props: HorizontalShowcaseProps) {
   const IMAGES = props.images?.length ? props.images : DEFAULT_IMAGES;
   const SLIDES = props.slides?.length ? props.slides : DEFAULT_SLIDES;
   const pinIndex = Number.isInteger(props.featuredIndex) ? (props.featuredIndex as number) : 6;
@@ -44,12 +37,13 @@ export default function WonJYou(props: HorizontalShowcaseProps) {
   const horizontalRef = useRef<HTMLElement>(null);
   const horizontalWrapperRef = useRef<HTMLDivElement>(null);
 
-  const selectors = useMemo(() => {
-    return {
+  const selectors = useMemo(
+    () => ({
       pinnedImg: `.${s.marqueeImg}.pin img`,
       slideTexts: `.${s.slideText}`,
-    };
-  }, []);
+    }),
+    []
+  );
 
   useLayoutEffect(() => {
     const rootEl = rootRef.current!;
@@ -61,14 +55,12 @@ export default function WonJYou(props: HorizontalShowcaseProps) {
 
     // Attendi decode immagini
     const imgs = Array.from(rootEl.querySelectorAll("img")) as HTMLImageElement[];
-    const ready = Promise.all(
-      imgs.map((img) => (img.complete ? Promise.resolve() : img.decode().catch(() => {})))
-    );
+    const ready = Promise.all(imgs.map((img) => (img.complete ? Promise.resolve() : img.decode().catch(() => {}))));
 
     // Stato clone/flip
     let pinnedMarqueeImgClone: HTMLImageElement | null = null;
     let isImgCloneActive = false;
-    let flipAnimation: gsap.core.Animation | null = null; // compat Timeline/Tween
+    let flipAnimation: gsap.core.Animation | null = null;
     let ro: ResizeObserver | null = null;
 
     function createPinnedMarqueeImgClone() {
@@ -84,10 +76,10 @@ export default function WonJYou(props: HorizontalShowcaseProps) {
 
       gsap.set(pinnedMarqueeImgClone, {
         position: "fixed",
-        left: centerX - original.offsetWidth / 2 + "px",
-        top: centerY - original.offsetHeight / 2 + "px",
-        width: original.offsetWidth + "px",
-        height: original.offsetHeight + "px",
+        left: centerX - original.offsetWidth / 2,
+        top: centerY - original.offsetHeight / 2,
+        width: original.offsetWidth,
+        height: original.offsetHeight,
         transform: "rotate(-5deg)",
         transformOrigin: "center center",
         pointerEvents: "none",
@@ -103,10 +95,8 @@ export default function WonJYou(props: HorizontalShowcaseProps) {
     function removePinnedMarqueeImgClone() {
       if (!isImgCloneActive) return;
       const original = marquee.querySelector(selectors.pinnedImg) as HTMLImageElement | null;
-      if (pinnedMarqueeImgClone) {
-        pinnedMarqueeImgClone.remove();
-        pinnedMarqueeImgClone = null;
-      }
+      pinnedMarqueeImgClone?.remove();
+      pinnedMarqueeImgClone = null;
       if (original) gsap.set(original, { opacity: 1 });
       isImgCloneActive = false;
     }
@@ -123,16 +113,16 @@ export default function WonJYou(props: HorizontalShowcaseProps) {
 
     ready.then(() => {
       ScrollTrigger.matchMedia({
-        // =================== DESKTOP / TABLET LANDSCAPE ===================
+        // =================== DESKTOP / LANDSCAPE ===================
         "(min-width: 1001px)": () => {
           const localTriggers: ScrollTrigger[] = [];
 
-          // Marquee: traslazione percentuale
           const stMarquee = ScrollTrigger.create({
             trigger: marquee,
             start: "top bottom",
             end: "top top",
             scrub: 1,
+            invalidateOnRefresh: true,
             onUpdate: (self) => {
               const xPosition = -80 + self.progress * 25; // -80% → -55%
               gsap.set(marqueeImages, { x: `${xPosition}%` });
@@ -140,17 +130,17 @@ export default function WonJYou(props: HorizontalShowcaseProps) {
           });
           localTriggers.push(stMarquee);
 
-          // Pin orizzontale
           const stPin = ScrollTrigger.create({
             trigger: horizontal,
             start: "top top",
             end: () => `+=${window.innerHeight * 5}`,
             pin: true,
+            pinSpacing: true,          // ← lascia spazio durante il pin
             anticipatePin: 1,
+            invalidateOnRefresh: true,
           });
           localTriggers.push(stPin);
 
-          // Clone on enter/leave
           const stClone = ScrollTrigger.create({
             trigger: marquee,
             start: "top top",
@@ -163,11 +153,11 @@ export default function WonJYou(props: HorizontalShowcaseProps) {
           resetTexts();
           const textEls = Array.from(rootEl.querySelectorAll<HTMLElement>(selectors.slideTexts));
 
-          // Flip + wrapper + reveal + bg sync
           const stFlip = ScrollTrigger.create({
             trigger: horizontal,
             start: "top 50%",
             end: () => `+=${window.innerHeight * 5.5}`,
+            invalidateOnRefresh: true,
             onEnter: () => {
               if (pinnedMarqueeImgClone && isImgCloneActive && !flipAnimation) {
                 const state = Flip.getState(pinnedMarqueeImgClone);
@@ -184,7 +174,8 @@ export default function WonJYou(props: HorizontalShowcaseProps) {
               }
             },
             onLeaveBack: () => {
-              if (flipAnimation) { flipAnimation.kill(); flipAnimation = null; }
+              flipAnimation?.kill();
+              flipAnimation = null;
               gsap.set(container, { backgroundColor: "var(--light)" });
               gsap.set(horizontal, { backgroundColor: "var(--light)", color: "var(--dark)" });
               gsap.set(horizontalWrapper, { x: "0%" });
@@ -218,12 +209,12 @@ export default function WonJYou(props: HorizontalShowcaseProps) {
               // FLIP 0 → 0.2
               if (progress <= 0.2) {
                 const sp = progress / 0.2;
-                if (flipAnimation) flipAnimation.progress(sp);
+                flipAnimation?.progress(sp);
               }
 
-              // Orizzontale + testo
+              // Orizzontale + testi
               if (progress > 0.2 && progress <= 0.95) {
-                if (flipAnimation) flipAnimation.progress(1);
+                flipAnimation?.progress(1);
                 const hp = (progress - 0.2) / 0.75;
                 const wrapperX = -66.67 * hp;
                 gsap.set(horizontalWrapper, { x: `${wrapperX}%` });
@@ -256,8 +247,7 @@ export default function WonJYou(props: HorizontalShowcaseProps) {
                   });
                 }
               } else if (progress > 0.95) {
-                if (flipAnimation) flipAnimation.progress(1);
-                // 🔧 FIX QUI: NESSUNA doppia virgoletta
+                flipAnimation?.progress(1);
                 if (pinnedMarqueeImgClone) gsap.set(pinnedMarqueeImgClone, { x: "-200%" });
                 gsap.set(horizontalWrapper, { x: "-66.67%" });
                 textEls.forEach((el) => {
@@ -270,10 +260,12 @@ export default function WonJYou(props: HorizontalShowcaseProps) {
           });
           localTriggers.push(stFlip);
 
-          // Refresh stabile
+          // Refresh stabile su resize
           ro = new ResizeObserver(() => ScrollTrigger.refresh());
           ro.observe(rootEl);
-          ScrollTrigger.refresh();
+
+          // Primo refresh dopo setup
+          requestAnimationFrame(() => ScrollTrigger.refresh());
 
           // cleanup desktop
           return () => {
@@ -282,11 +274,11 @@ export default function WonJYou(props: HorizontalShowcaseProps) {
           };
         },
 
-        // =================== MOBILE / TABLET PORTRAIT ===================
+        // =================== MOBILE / PORTRAIT ===================
         "(max-width: 1000px)": () => {
-          // Mobile: una colonna, niente pin/flip, fade-in leggero
           removePinnedMarqueeImgClone();
-          flipAnimation?.kill(); flipAnimation = null;
+          flipAnimation?.kill();
+          flipAnimation = null;
 
           gsap.set(container,  { backgroundColor: "var(--light)" });
           gsap.set(horizontal, { backgroundColor: "var(--light)", color: "var(--dark)" });
@@ -298,7 +290,6 @@ export default function WonJYou(props: HorizontalShowcaseProps) {
             horizontalWrapper.querySelectorAll<HTMLElement>(`.${s.horizontalSlide}`)
           ).filter((el) => !el.classList.contains(s.horizontalSpacer));
 
-          // Fade-in per ogni slide
           slides.forEach((slide) => {
             gsap.fromTo(
               slide,
@@ -313,12 +304,12 @@ export default function WonJYou(props: HorizontalShowcaseProps) {
                   start: "top 85%",
                   end: "bottom 60%",
                   toggleActions: "play none none reverse",
+                  invalidateOnRefresh: true,
                 },
               }
             );
           });
 
-          // Fade-in dei testi
           const textEls = Array.from(rootEl.querySelectorAll<HTMLElement>(selectors.slideTexts));
           textEls.forEach((el) => {
             gsap.fromTo(
@@ -334,14 +325,15 @@ export default function WonJYou(props: HorizontalShowcaseProps) {
                   trigger: el,
                   start: "top 90%",
                   toggleActions: "play none none reverse",
+                  invalidateOnRefresh: true,
                 },
               }
             );
           });
 
-          ScrollTrigger.refresh();
+          requestAnimationFrame(() => ScrollTrigger.refresh());
 
-          // cleanup mobile
+          // cleanup mobile: uccidi solo i trigger interni al componente
           return () => {
             ScrollTrigger.getAll().forEach((st) => {
               const trg = st.vars?.trigger as HTMLElement | undefined;
@@ -351,8 +343,8 @@ export default function WonJYou(props: HorizontalShowcaseProps) {
         },
       });
 
-      // Primo refresh generale
-      ScrollTrigger.refresh();
+      // Refresh generale finale
+      requestAnimationFrame(() => ScrollTrigger.refresh());
     });
 
     // cleanup generale
@@ -364,7 +356,13 @@ export default function WonJYou(props: HorizontalShowcaseProps) {
         if (trg && trg.closest(`.${s.root}`)) st.kill();
       });
     };
-  }, [IMAGES.join("|"), SLIDES.map((sl) => sl.image).join("|"), pinIndex, selectors.pinnedImg, selectors.slideTexts]);
+  }, [
+    IMAGES.join("|"),
+    SLIDES.map((sl) => sl.image).join("|"),
+    pinIndex,
+    selectors.pinnedImg,
+    selectors.slideTexts,
+  ]);
 
   return (
     <div ref={rootRef} className={s.root}>
@@ -389,8 +387,13 @@ export default function WonJYou(props: HorizontalShowcaseProps) {
         </div>
       </section>
 
-      {/* ORIZZONTALE (desktop) / STACK VERTICALE (mobile) */}
-      <section ref={horizontalRef} className={`${s.horizontalScroll} ${s.bleed}`}>
+      {/* ORIZZONTALE (desktop) / STACK (mobile) */}
+      <section
+        ref={horizontalRef}
+        className={`${s.horizontalScroll} ${s.bleed}`}
+        // Evita blocchi dello scroll verticale (importante su mobile)
+        style={{ touchAction: "pan-y", overscrollBehavior: "contain" }}
+      >
         <div ref={horizontalWrapperRef} className={`${s.horizontalScrollWrapper} ${s.gpuLayer}`}>
           <div className={`${s.horizontalSlide} ${s.horizontalSpacer}`} />
           {SLIDES.map((sl, i) => (

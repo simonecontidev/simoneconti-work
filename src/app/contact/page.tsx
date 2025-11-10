@@ -1,8 +1,112 @@
 // app/contact/page.tsx
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Copy from "../../../components/Copy/Copy";
+
+/* ---------------- Helpers: mail sicura + copy ---------------- */
+function buildEmail(): string {
+  // Semplice offuscamento anti-bot: niente stringa completa in sorgente
+  const u = "hello";
+  const d = "simoneconti";
+  const tld = "work";
+  return `${u}@${d}.${tld}`;
+}
+
+function useClipboard() {
+  const [copied, setCopied] = useState(false);
+  const copy = useCallback(async (text: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1600);
+    } catch {
+      // fallback invisibile
+      const ta = document.createElement("textarea");
+      ta.value = text;
+      ta.style.position = "fixed";
+      ta.style.opacity = "0";
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand("copy");
+      document.body.removeChild(ta);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1600);
+    }
+  }, []);
+  return { copied, copy };
+}
+
+/* ---------------- Mail button: a11y + middle click ---------------- */
+function MailButton({
+  className = "",
+  label = "Let’s Talk",
+}: {
+  className?: string;
+  label?: string;
+}) {
+  const email = buildEmail();
+
+  const openMail = useCallback(() => {
+    window.location.href = `mailto:${email}`;
+  }, [email]);
+
+  const onKeyDown = (e: React.KeyboardEvent<HTMLButtonElement>) => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      openMail();
+    }
+  };
+
+  const onAuxClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+    // Middle click → apri comunque il client
+    if (e.button === 1) openMail();
+  };
+
+  return (
+    <button
+      type="button"
+      onClick={openMail}
+      onKeyDown={onKeyDown}
+      onAuxClick={onAuxClick}
+      className={[
+        "inline-flex items-center justify-center rounded-full px-5 py-2.5 font-medium ring-1 ring-inset w-full sm:w-auto",
+        "bg-zinc-900 text-zinc-50 ring-zinc-900/10 hover:opacity-95",
+        "dark:bg-zinc-50 dark:text-zinc-950 dark:ring-zinc-50/10",
+        "transition focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-zinc-400",
+        className,
+      ].join(" ")}
+      aria-label="Contact Simone via email"
+    >
+      {label}
+    </button>
+  );
+}
+
+/* ---------------- SafeLink esterno con rel corretto ---------------- */
+function SafeExternalLink({
+  href,
+  children,
+  className = "",
+  ariaLabel,
+}: {
+  href: string;
+  children: React.ReactNode;
+  className?: string;
+  ariaLabel?: string;
+}) {
+  return (
+    <a
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      className={className}
+      aria-label={ariaLabel}
+    >
+      {children}
+    </a>
+  );
+}
 
 export default function ContactPage() {
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -12,13 +116,14 @@ export default function ContactPage() {
   const sizeRef = useRef<number>(0);
   const lastTsRef = useRef<number>(0);
   const pausedRef = useRef<boolean>(false);
+  const { copied, copy } = useClipboard();
 
   // Floating “saver” animation (desktop only, pointer fine, no reduced motion)
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
 
-    const BASE_SPEED = 120; // px/sec (usiamo delta time)
+    const BASE_SPEED = 120; // px/sec
     const COUNT = 10;
     const CHANGE_DELAY_MS = 20;
     const EDGE_OFFSET = -40;
@@ -33,13 +138,11 @@ export default function ContactPage() {
     let canTurn = true;
     let imgIndex = 1;
 
-    // misura base
     const computeSize = () => {
       const { w, h } = rectRef.current;
       return Math.max(160, Math.min(360, Math.round(Math.min(w, h) * 0.28)));
     };
 
-    // aggiorna rectRef con ResizeObserver (più efficiente)
     const ro = new ResizeObserver((entries) => {
       for (const entry of entries) {
         const cr = entry.contentRect;
@@ -53,7 +156,6 @@ export default function ContactPage() {
     });
     ro.observe(container);
 
-    // Preload immagini una volta
     const imgs: HTMLImageElement[] = [];
     const preload = async () => {
       imgs.length = 0;
@@ -87,7 +189,6 @@ export default function ContactPage() {
       stop();
       await preload();
 
-      // inizializza misure subito
       const r = container.getBoundingClientRect();
       rectRef.current = { w: r.width, h: r.height };
       sizeRef.current = computeSize();
@@ -105,10 +206,9 @@ export default function ContactPage() {
         zIndex: "0",
         willChange: "transform",
       } as CSSStyleDeclaration);
-      saver.setAttribute("aria-hidden", "true"); // decorativo
+      saver.setAttribute("aria-hidden", "true");
       container.appendChild(saver);
 
-      // posizione/velocità iniziali
       let x = rectRef.current.w / 2 - sizeRef.current / 2;
       let y = rectRef.current.h / 2 - sizeRef.current / 2;
       let vx = (Math.random() > 0.5 ? 1 : -1) * BASE_SPEED;
@@ -123,13 +223,12 @@ export default function ContactPage() {
           return;
         }
         if (pausedRef.current) {
-          // manteniamo lastTs aggiornato per evitare salti al resume
           lastTsRef.current = ts;
           rafRef.current = requestAnimationFrame(tick);
           return;
         }
 
-        const dt = Math.min(0.05, (ts - lastTsRef.current) / 1000); // clamp a 50ms
+        const dt = Math.min(0.05, (ts - lastTsRef.current) / 1000);
         lastTsRef.current = ts;
 
         const { w, h } = rectRef.current;
@@ -168,7 +267,6 @@ export default function ContactPage() {
     const handleResizeOrMQ = () => {
       const prev = desktop;
       desktop = canRun();
-      // size verrà aggiornato dal ResizeObserver
       if (desktop && !prev) start();
       if (!desktop && prev) stop();
     };
@@ -182,7 +280,6 @@ export default function ContactPage() {
     mqDesktop.addEventListener?.("change", handleResizeOrMQ);
     mqPointerFine.addEventListener?.("change", handleResizeOrMQ);
     mqReduced.addEventListener?.("change", handleResizeOrMQ);
-    // Safari fallback
     mqDesktop.addListener?.(handleResizeOrMQ);
     mqPointerFine.addListener?.(handleResizeOrMQ);
     mqReduced.addListener?.(handleResizeOrMQ);
@@ -203,13 +300,7 @@ export default function ContactPage() {
     };
   }, []);
 
-  // Accessibilità tastiera per il bottone mailto
-  const onMailtoKey = (e: React.KeyboardEvent<HTMLButtonElement>) => {
-    if (e.key === "Enter" || e.key === " ") {
-      e.preventDefault();
-      window.location.href = "mailto:hello@simoneconti.work";
-    }
-  };
+  const email = buildEmail();
 
   return (
     <section
@@ -229,11 +320,7 @@ export default function ContactPage() {
         <div className="flex items-start md:items-center">
           <div>
             <Copy delay={0.6}>
-              <h2
-                className="
-                  text-3xl sm:text-4xl md:text-6xl font-semibold leading-tight tracking-tight
-                "
-              >
+              <h2 className="text-3xl sm:text-4xl md:text-6xl font-semibold leading-tight tracking-tight">
                 Let’s build something that feels alive.
               </h2>
             </Copy>
@@ -259,6 +346,7 @@ export default function ContactPage() {
             </p>
           </Copy>
 
+          {/* Focus / Location */}
           <div>
             <Copy delay={0.8}>
               <p className="mb-2 text-xs sm:text-sm uppercase tracking-wide text-zinc-600 dark:text-zinc-400/80">
@@ -279,39 +367,65 @@ export default function ContactPage() {
             </Copy>
           </div>
 
-          <div>
-            {/* email as button */}
-            <button
-              onClick={() => (window.location.href = "mailto:hello@simoneconti.work")}
-              onKeyDown={onMailtoKey}
-              className="
-                inline-flex items-center justify-center rounded-full px-5 py-2.5 font-medium ring-1 ring-inset w-full sm:w-auto
-                bg-zinc-900 text-zinc-50 ring-zinc-900/10 hover:opacity-95
-                dark:bg-zinc-50 dark:text-zinc-950 dark:ring-zinc-50/10
-                transition focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-zinc-400
-              "
-              aria-label="Contact Simone via email"
-            >
-              Let’s Talk
-            </button>
-            <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400/80">
+          {/* CTA + mail alternatives */}
+          <div className="flex flex-col gap-2">
+            <MailButton />
+
+            <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400/80">
               or email me at{" "}
+              {/* Fallback <a> per utenti senza JS, con rel corretto */}
               <a
-                href="mailto:hello@simoneconti.work"
+                href={`mailto:${email}`}
                 className="underline underline-offset-2 hover:no-underline"
+                rel="noopener noreferrer"
               >
-                hello@simoneconti.work
+                {email}
               </a>
             </p>
+
+            <div className="flex items-center gap-6 pt-1">
+              <button
+                type="button"
+                onClick={() => copy(email)}
+                className="text-sm underline underline-offset-4 hover:no-underline text-zinc-700 dark:text-zinc-300"
+                aria-live="polite"
+              >
+                {copied ? "Copied ✓" : "Copy email"}
+              </button>
+
+              {/* Social: sempre rel="noopener" */}
+              <SafeExternalLink
+                href="https://www.linkedin.com/in/simonecontidev/"
+                ariaLabel="Open Simone's LinkedIn"
+                className="text-sm underline underline-offset-4 hover:no-underline text-zinc-700 dark:text-zinc-300"
+              >
+                LinkedIn
+              </SafeExternalLink>
+              <SafeExternalLink
+                href="https://github.com/simoneconti"
+                ariaLabel="Open Simone's GitHub"
+                className="text-sm underline underline-offset-4 hover:no-underline text-zinc-700 dark:text-zinc-300"
+              >
+                GitHub
+              </SafeExternalLink>
+              <SafeExternalLink
+                href="https://codepen.io/"
+                ariaLabel="Open Simone's CodePen"
+                className="text-sm underline underline-offset-4 hover:no-underline text-zinc-700 dark:text-zinc-300"
+              >
+                CodePen
+              </SafeExternalLink>
+            </div>
           </div>
 
+          {/* Credits */}
           <div>
             <Copy delay={1.2}>
               <p className="mb-2 text-xs sm:text-sm uppercase tracking-wide text-zinc-600 dark:text-zinc-400/80">
                 Credits
               </p>
               <p className="text-base sm:text-lg">Built by Simone Conti</p>
-              <p className="text-base sm:text-lg">Edition 2025</p>
+              <p className="text-base sm:text-lg">Edition {new Date().getFullYear()}</p>
             </Copy>
           </div>
         </div>

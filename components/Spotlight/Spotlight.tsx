@@ -116,7 +116,7 @@ export default function Spotlight() {
             "
           >
             <div className="flex-1 overflow-hidden rounded-xl">
-              <img src="/about/portrait.jpg" className="h-[clamp(140px,22vw,260px)] w-full object-cover" alt="" />
+              <img src="/portfolio/iniesta-academy-1.png" className="h-[clamp(140px,22vw,260px)] w-full object-cover" alt="" />
             </div>
             <div className="marquee-text flex-1 grid place-items-center rounded-xl bg-transparent">
               <h1 className="font-sans text-[clamp(28px,6vw,56px)] font-black uppercase tracking-[-0.02em] sm:tracking-[-0.03em]">
@@ -124,10 +124,10 @@ export default function Spotlight() {
               </h1>
             </div>
             <div className="flex-1 overflow-hidden rounded-xl">
-              <img src="/about/portrait.jpg" className="h-[clamp(140px,22vw,260px)] w-full object-cover" alt="" />
+              <img src="/assets/img2.jpg" className="h-[clamp(140px,22vw,260px)] w-full object-cover" alt="" />
             </div>
             <div className="flex-1 overflow-hidden rounded-xl">
-              <img src="/about/portrait.jpg" className="h-[clamp(140px,22vw,260px)] w-full object-cover" alt="" />
+              <img src="/assets/img3.jpg" className="h-[clamp(140px,22vw,260px)] w-full object-cover" alt="" />
             </div>
           </div>
           {/* spacer per dare altezza alla riga */}
@@ -143,13 +143,13 @@ export default function Spotlight() {
         >
           <div className="js-marquee absolute left-0 top-1/2 flex w-full -translate-y-1/2 gap-3 sm:gap-4">
             <div className="flex-1 overflow-hidden rounded-xl">
-              <img src="/about/portrait.jpg" className="h-[clamp(120px,18vw,220px)] w-full object-cover" alt="" />
+              <img src="/portfolio/iniesta-academy-2.png" className="h-[clamp(120px,18vw,220px)] w-full object-cover" alt="" />
             </div>
             <div className="flex-1 overflow-hidden rounded-xl">
-              <img src="/about/portrait.jpg" className="h-[clamp(120px,18vw,220px)] w-full object-cover" alt="" />
+              <img src="/assets/img5.jpg" className="h-[clamp(120px,18vw,220px)] w-full object-cover" alt="" />
             </div>
             <div className="flex-1 overflow-hidden rounded-xl">
-              <img src="/about/portrait.jpg" className="h-[clamp(120px,18vw,220px)] w-full object-cover" alt="" />
+              <img src="/portfolio/mikakus-2.png" className="h-[clamp(120px,18vw,220px)] w-full object-cover" alt="" />
             </div>
             <div className="marquee-text flex-1 grid place-items-center rounded-xl bg-transparent">
               <h1 className="font-sans text-[clamp(26px,5.5vw,52px)] font-black uppercase tracking-[-0.02em] sm:tracking-[-0.03em]">
@@ -169,7 +169,7 @@ export default function Spotlight() {
         >
           <div className="js-marquee absolute left-0 top-1/2 flex w-full -translate-y-1/2 gap-3 sm:gap-4">
             <div className="flex-1 overflow-hidden rounded-xl">
-              <img src="/about/portrait.jpg" className="h-[clamp(140px,22vw,260px)] w-full object-cover" alt="" />
+              <img src="/img-4.jpg" className="h-[clamp(140px,22vw,260px)] w-full object-cover" alt="" />
             </div>
             <div className="marquee-text flex-1 grid place-items-center rounded-xl bg-transparent">
               <h1 className="font-sans text-[clamp(28px,6vw,56px)] font-black uppercase tracking-[-0.02em] sm:tracking-[-0.03em]">
@@ -177,10 +177,10 @@ export default function Spotlight() {
               </h1>
             </div>
             <div className="flex-1 overflow-hidden rounded-xl">
-              <img src="/about/portrait.jpg" className="h-[clamp(140px,22vw,260px)] w-full object-cover" alt="" />
+              <img src="/img-1.jpg" className="h-[clamp(140px,22vw,260px)] w-full object-cover" alt="" />
             </div>
             <div className="flex-1 overflow-hidden rounded-xl">
-              <img src="/about/portrait.jpg" className="h-[clamp(140px,22vw,260px)] w-full object-cover" alt="" />
+              <img src="/img-5.jpg" className="h-[clamp(140px,22vw,260px)] w-full object-cover" alt="" />
             </div>
           </div>
           <div className="h-[clamp(140px,22vw,260px)]" />
@@ -195,13 +195,13 @@ export default function Spotlight() {
         >
           <div className="js-marquee absolute left-0 top-1/2 flex w-full -translate-y-1/2 gap-3 sm:gap-4">
             <div className="flex-1 overflow-hidden rounded-xl">
-              <img src="/about/portrait.jpg" className="h-[clamp(120px,18vw,220px)] w-full object-cover" alt="" />
+              <img src="/portfolio/jobboard-1.png" className="h-[clamp(120px,18vw,220px)] w-full object-cover" alt="" />
             </div>
             <div className="flex-1 overflow-hidden rounded-xl">
-              <img src="/about/portrait.jpg" className="h-[clamp(120px,18vw,220px)] w-full object-cover" alt="" />
+              <img src="/portfolio/tropify-4.png" className="h-[clamp(120px,18vw,220px)] w-full object-cover" alt="" />
             </div>
             <div className="flex-1 overflow-hidden rounded-xl">
-              <img src="/about/portrait.jpg" className="h-[clamp(120px,18vw,220px)] w-full object-cover" alt="" />
+              <img src="/portfolio/petfinder-4.png" className="h-[clamp(120px,18vw,220px)] w-full object-cover" alt="" />
             </div>
             <div className="marquee-text flex-1 grid place-items-center rounded-xl bg-transparent">
               <h1 className="font-sans text-[clamp(26px,5.5vw,52px)] font-black uppercase tracking-[-0.02em] sm:tracking-[-0.03em]">

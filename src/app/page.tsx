@@ -8,39 +8,39 @@ import ScrollImageReveal from "../../components/ScrollImageReveal/ScrollImageRev
 import HomeTextRevealSection from "../../components/HomeTextRevealSection/HomeTextRevealSection";
 
 export default function Home() {
-  // 👉 progetti (se ti servono in futuro)
-  const projects = [
-    { src: "/projects/iniesta.jpg", alt: "Iniesta Academy", caption: "WordPress + WooCommerce", bgColor: "#1a1a1a" },
-    { src: "/projects/guava.jpg", alt: "Guava", caption: "Shopify — custom component", bgColor: "#0f2027" },
-    { src: "/projects/mikakus.jpg", alt: "Mikakus", caption: "Shopify Liquid component", bgColor: "#2b1b1b" },
-
-    { src: "/projects/petfinder.jpg", alt: "PetFinder", caption: "Next.js app", bgColor: "#1d1e26" },
-    { src: "/projects/tropify.jpg", alt: "Tropify", caption: "Next.js — audio visuals", bgColor: "#132d2a" },
-    { src: "/projects/3dportfolio.jpg", alt: "3D Portfolio", caption: "Three.js + React", bgColor: "#101820" },
-
-    { src: "/projects/mortgage.jpg", alt: "Mortgage Calculator", caption: "React — finance UI", bgColor: "#1a1423" },
-    { src: "/projects/splitbill.jpg", alt: "Split The Bill", caption: "React — utilities", bgColor: "#1f1b24" },
-    { src: "/projects/jobboard.jpg", alt: "Job Filtering Board", caption: "Next.js — filters", bgColor: "#14213d" },
-
-    { src: "/projects/taskboard.jpg", alt: "Taskboard", caption: "Next.js — Kanban", bgColor: "#1b2a41" },
-    { src: "/projects/linktree.jpg", alt: "Link Tree", caption: "Next.js — profile hub", bgColor: "#22333b" },
-    { src: "/projects/taskflow.jpg", alt: "Taskflow", caption: "React — flows", bgColor: "#1a2f2a" },
-  ];
-
   return (
     <main className="min-h-dvh grid place-items-center bg-black text-zinc-100">
       <SliderHero
         mode="bleed"
-        images={["/assets/img1.jpg", "/assets/img2.jpg", "/assets/img3.jpg", "/assets/img4.jpg", "/assets/img5.jpg"]}
+        images={[
+          "/assets/img1-new.jpg",
+          "/assets/img5-new.jpg",
+          "/assets/img2-new.jpg",
+          "/assets/img4-new.jpg",
+          "/assets/img3-new.jpg",
+        ]}
         titles={["Pet Finder", "Tropify", "Split the Bill App", "Job App", "Taskflow"]}
       />
 
       <HorizontalShowcase
-        images={["/img-1.jpg", "/img-2.jpg", "/img-3.jpg", "/img-4.jpg", "/img-5.jpg", "/img-6.jpg", "/img-7.jpg", "/img-8.jpg"]}
+        images={[
+          "/img-1-new.jpg",
+          "/img-2-new.jpg",
+          "/img-3-new.jpg",
+          "/img-4-new.jpg",
+          "/img-5.jpg",
+          "/img-6.jpg",
+          "/img-7.jpg",
+          "/img-8.jpg",
+        ]}
         slides={[
-          { image: "/img-1.jpg", text: "Slide one text…" },
-          { image: "/img-2.jpg", text: "Slide two text…" },
-          { image: "/img-3.jpg", text: "Slide three text…" },
+          { image: "/img-1-new.jpg", text: "" },
+          {
+            image: "/img-2-new.jpg",
+            text:
+              "From fast Next.js apps to tactile GSAP animations. From Shopify integrations to 3D storytelling.",
+          },
+          { image: "/img-3-new.jpg", text: "Inspired by nature, crafted with motion." },
         ]}
         featuredIndex={3}
       />
@@ -55,26 +55,36 @@ export default function Home() {
         ]}
         aboutText={`From concept to production: performant UX, elegant motion, real results.`}
         copyText={`Selected work across corporate, e-commerce, and editorial platforms.`}
-        options={{ minScale: 0.12, minScaleMobile: 0.32, breakpoint: 1000, pinMultiplier: 2, enableSmooth: true }}
+        options={{
+          minScale: 0.12,
+          minScaleMobile: 0.32,
+          breakpoint: 1000,
+          pinMultiplier: 2,
+          enableSmooth: true,
+        }}
       />
 
       <HomeTextRevealSection />
 
-      {/* ✅ ScrollImageReveal: rimosso `theme` e `parallaxDriftX`.
-          Se vuoi un look dark usa `colors`. */}
+      {/* ✅ ScrollImageReveal con link ai progetti */}
       <ScrollImageReveal
         items={[
-          { src: "/img-1.jpg", alt: "Work 1", caption: "Neo Tropic 01", bgColor: "#faba4a" },
-          { src: "/img-2.jpg", alt: "Work 2", caption: "Neo Tropic 02", bgColor: "#bb2a26" },
-          { src: "/img-3.jpg", alt: "Work 3", caption: "Neo Tropic 03", bgColor: "#7e7d65" },
-          { src: "/img-4.jpg", alt: "Work 4", caption: "Neo Tropic 04", bgColor: "#989682" },
-          { src: "/img-5.jpg", alt: "Work 5", caption: "Neo Tropic 05", bgColor: "#22333b" },
-          { src: "/img-6.jpg", alt: "Work 6", caption: "Neo Tropic 06", bgColor: "#1b2a41" },
-        ]}
+  { src: "/portfolio/petfinder-1.png", alt: "PetFinder — Cover", caption: "PetFinder — Next.js App", bgColor: "#7e7d65", href: "/portfolio/petfinder" },
+  { src: "/portfolio/tropify-1.png", alt: "Tropify — Experimental web", caption: "Tropify — Experiential Web", bgColor: "#989682", href: "/portfolio/tropify" },
+  { src: "/portfolio/guava-preview.png", alt: "Guava — Cover", caption: "Guava Bikes — Shopify Components", bgColor: "#faba4a", href: "/portfolio/guava-bikes" },
+  { src: "/portfolio/taskflow-1.png", alt: "Taskboard — Cover", caption: "Taskboard — Kanban App", bgColor: "#22333b", href: "/portfolio/taskboard" },
+  { src: "/portfolio/mikakus-preview.png", alt: "Mikakus — Slider", caption: "Mikakus — Shopify Slider & LPO", bgColor: "#bb2a26", href: "/portfolio/mikakus-shopify" },
+  { src: "/portfolio/jobboard-1.png", alt: "Job Board — Cover", caption: "Job Board — Real-Time Filtering App", bgColor: "#14213d", href: "/portfolio/job-board" },
+  { src: "/portfolio/split-1.png", alt: "Split the Bill — Cover", caption: "Split the Bill — React Utility App", bgColor: "#1f1b24", href: "/portfolio/split-bill" },
+  
+  // “gli altri” (Mortgage, Links, Iniesta Academy)  
+  { src: "/portfolio/mortgage-1.png", alt: "Mortgage Calculator — Cover", caption: "Mortgage Calculator — Finance UI", bgColor: "#1a1423", href: "/portfolio/mortgage-calculator" },
+  { src: "/portfolio/links-1.png", alt: "Links — Cover", caption: "Links — Minimal Link Hub", bgColor: "#22333b", href: "/portfolio/links" },
+  { src: "/portfolio/iniesta-academy-preview.png", alt: "Iniesta Academy — Cover", caption: "Iniesta Academy — WooCommerce Multilingual", bgColor: "#1a1a1a", href: "/portfolio/iniestacademy" }
+]}
         enableParallax
         parallaxMode="alternate"
         parallaxAmount={80}
-        // Look & feel scuro coerente con la pagina
         colors={{
           bg: "#0b0b0b",
           text: "#ffffff",

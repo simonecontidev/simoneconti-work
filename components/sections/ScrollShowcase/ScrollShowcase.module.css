@@ -49,3 +49,37 @@
   .ssRoot h1{ font-size:1rem; letter-spacing:-0.05rem; }
   .ssAnimateText{ width:100%; }
 }
+
+/* Valore calcolato da JS */
+.ssRoot {
+  --ss-overlap: 0px;
+}
+
+/* La sezione copy sale sotto gli SVG fino a toccarli */
+.ssServicesCopy {
+  /* spinge in su il blocco copy quanto l'altezza finale scalata */
+  margin-top: calc(var(--ss-overlap) * -1);
+  position: relative;
+  z-index: 2;            /* sopra allo spacer del pin */
+  /* opzionale: un leggero padding-top per non “toccarli” troppo */
+  /* padding-top: 0.5rem; */
+}
+
+/* Assicura che le header restino sopra lo sfondo durante il pin */
+.ssServices {
+  position: relative;
+  z-index: 1;
+}
+
+/* Se vuoi un leggero fade edge tra SVG e testo */
+.ssServicesCopy::before {
+  content: "";
+  position: absolute;
+  top: -12px;
+  left: 0;
+  right: 0;
+  height: 12px;
+  pointer-events: none;
+  /* Gradiente opzionale, commenta se non lo vuoi */
+  /* background: linear-gradient(to bottom, rgba(0,0,0,0.08), transparent); */
+}

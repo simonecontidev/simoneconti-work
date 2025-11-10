@@ -6,8 +6,6 @@ import styles from "./ScrollImageReveal.module.css";
 type Item = { src: string; alt: string; caption?: string; bgColor?: string };
 type RevealDirection = "top" | "bottom" | "left" | "right";
 type ParallaxMode = "same" | "alternate" | "random";
-
-/** ✅ Tipo helper: abilita --custom-props in maniera tip-safe */
 type CSSVars = React.CSSProperties & { [key: `--${string}`]: string };
 
 export type ScrollImageRevealProps = {
@@ -28,7 +26,9 @@ export type ScrollImageRevealProps = {
   parallaxAmount?: number;
   parallaxEase?: string;
   parallaxMode?: ParallaxMode;
-  parallaxMobileScale?: number;
+  parallaxMobileScale?: number; // kept for compatibility, no longer used when disabled
+  /** NEW: disable parallax at/under this width (px). Default 900. */
+  parallaxBreakpoint?: number;
 
   colors?: {
     bg?: string;
@@ -59,6 +59,7 @@ export default function ScrollImageReveal({
   parallaxEase = "power1.out",
   parallaxMode = "alternate",
   parallaxMobileScale = 0.6,
+  parallaxBreakpoint = 900, // ← NEW default
 
   colors,
   className,
@@ -66,7 +67,6 @@ export default function ScrollImageReveal({
   const containerRef = useRef<HTMLDivElement>(null);
   const bgRef = useRef<HTMLDivElement>(null);
 
-  // ✅ Nessun "any": usiamo CSSVars per le custom properties
   const cssVars = useMemo<CSSVars>(() => {
     const v: CSSVars = {};
     if (colors?.bg) v["--cmp-surface"] = colors.bg;
@@ -91,109 +91,137 @@ export default function ScrollImageReveal({
 
       if (!containerRef.current) return;
 
-      const isMobile =
-        typeof window !== "undefined" &&
-        window.matchMedia("(max-width: 899px)").matches;
+      // --- Responsive parallax toggle
+      const bpQuery = window.matchMedia(`(max-width: ${parallaxBreakpoint}px)`);
+      let isSmall = bpQuery.matches;
+      const parallaxEnabled = enableParallax && !prefersReduced && !isSmall;
 
-      ctx = gsap.context(() => {
-        const cards = Array.from(
-          containerRef.current!.querySelectorAll<HTMLDivElement>(`.${styles.irs_item}`)
-        );
+      const onBPChange = () => {
+        isSmall = bpQuery.matches;
+        // Rebuild ScrollTriggers with new setting
+        ScrollTrigger.getAll().forEach((st) => {
+          const trg = st.vars?.trigger as HTMLElement | undefined;
+          if (trg && containerRef.current && trg.closest(`.${styles.irs_root}`)) st.kill();
+        });
+        if (ctx) ctx.revert(); // revert old context
+        build(); // rebuild with current state
+      };
 
-        const clipStart =
-          revealFrom === "top"
-            ? "polygon(0% 0%, 100% 0%, 100% 0%, 0% 0%)"
-            : revealFrom === "bottom"
-            ? "polygon(0% 100%, 100% 100%, 100% 100%, 0% 100%)"
-            : revealFrom === "left"
-            ? "polygon(0% 0%, 0% 0%, 0% 100%, 0% 100%)"
-            : "polygon(100% 0%, 100% 0%, 100% 100%, 100% 100%)";
+      bpQuery.addEventListener?.("change", onBPChange);
+      bpQuery.addListener?.(onBPChange); // Safari fallback
 
-        const clipEnd = "polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%)";
-
-        cards.forEach((card, index) => {
-          const img = card.querySelector<HTMLImageElement>(`.${styles.irs_img}`);
-          const media = card.querySelector<HTMLDivElement>(`.${styles.irs_media}`);
-          if (!img || !media) return;
-
-          // init
-          gsap.set(img, { clipPath: clipStart, scale: 1.05, willChange: "clip-path, transform" });
-          if (fadeUp)
-            gsap.set(media, { opacity: 0, y: fadeUpOffset, willChange: "opacity, transform" });
-
-          // reveal
-          gsap.fromTo(
-            img,
-            { clipPath: clipStart, scale: 1.05 },
-            {
-              clipPath: clipEnd,
-              scale: 1,
-              duration,
-              ease,
-              scrollTrigger: {
-                trigger: card,
-                start: startTrigger,
-                toggleActions: once ? "play none none none" : "play reverse play reverse",
-                onEnter: () => {
-                  if (showBackgroundLayer && bgRef.current) {
-                    const color = card.getAttribute("data-bg");
-                    gsap.to(bgRef.current, {
-                      backgroundColor:
-                        color ||
-                        getComputedStyle(containerRef.current!)
-                          .getPropertyValue("--cmp-surface-strong")
-                          .trim(),
-                      duration: 0.6,
-                      ease: "power2.out",
-                    });
-                  }
-                  onActiveIndexChange?.(index);
-                },
-              },
-              onStart: () => {
-                if (fadeUp)
-                  gsap.to(media, { opacity: 1, y: 0, duration: 0.9, ease: "power2.out" });
-              },
-            }
+      const build = () => {
+        ctx = gsap.context(() => {
+          const cards = Array.from(
+            containerRef.current!.querySelectorAll<HTMLDivElement>(`.${styles.irs_item}`)
           );
 
-          // PARALLAX solo verticale (↑/↓ per colonna)
-          if (enableParallax) {
-            const amount = isMobile
-              ? parallaxAmount * parallaxMobileScale
-              : parallaxAmount;
-            const isRightCol = index % 2 === 1;
-            const dirY = isRightCol ? -1 : 1;
+          const clipStart =
+            revealFrom === "top"
+              ? "polygon(0% 0%, 100% 0%, 100% 0%, 0% 0%)"
+              : revealFrom === "bottom"
+              ? "polygon(0% 100%, 100% 100%, 100% 100%, 0% 100%)"
+              : revealFrom === "left"
+              ? "polygon(0% 0%, 0% 0%, 0% 100%, 0% 100%)"
+              : "polygon(100% 0%, 100% 0%, 100% 100%, 100% 100%)";
 
+          const clipEnd = "polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%)";
+
+          cards.forEach((card, index) => {
+            const img = card.querySelector<HTMLImageElement>(`.${styles.irs_img}`);
+            const media = card.querySelector<HTMLDivElement>(`.${styles.irs_media}`);
+            if (!img || !media) return;
+
+            // init
+            gsap.set(img, { clipPath: clipStart, scale: 1.05, willChange: "clip-path, transform" });
+            if (fadeUp)
+              gsap.set(media, { opacity: 0, y: fadeUpOffset, willChange: "opacity, transform" });
+
+            // reveal
             gsap.fromTo(
-              card,
-              { y: amount * 0.6 * dirY },
+              img,
+              { clipPath: clipStart, scale: 1.05 },
               {
-                y: -amount * 0.6 * dirY,
-                ease: parallaxEase,
+                clipPath: clipEnd,
+                scale: 1,
+                duration,
+                ease,
                 scrollTrigger: {
                   trigger: card,
-                  start: "top bottom",
-                  end: "bottom top",
-                  scrub: true,
+                  start: startTrigger,
+                  toggleActions: once ? "play none none none" : "play reverse play reverse",
+                  invalidateOnRefresh: true,
+                  onEnter: () => {
+                    if (showBackgroundLayer && bgRef.current) {
+                      const color = card.getAttribute("data-bg");
+                      gsap.to(bgRef.current, {
+                        backgroundColor:
+                          color ||
+                          getComputedStyle(containerRef.current!)
+                            .getPropertyValue("--cmp-surface-strong")
+                            .trim(),
+                        duration: 0.6,
+                        ease: "power2.out",
+                      });
+                    }
+                    onActiveIndexChange?.(index);
+                  },
+                },
+                onStart: () => {
+                  if (fadeUp)
+                    gsap.to(media, { opacity: 1, y: 0, duration: 0.9, ease: "power2.out" });
                 },
               }
             );
+
+            // --- PARALLAX (disabled on small screens or reduced motion)
+            if (parallaxEnabled) {
+              // Keep mode API for future, here we just move vertically
+              const dirY =
+                parallaxMode === "alternate"
+                  ? index % 2 === 1
+                    ? -1
+                    : 1
+                  : 1;
+
+              gsap.fromTo(
+                card,
+                { y: (parallaxAmount * 0.6) * dirY },
+                {
+                  y: -(parallaxAmount * 0.6) * dirY,
+                  ease: parallaxEase,
+                  scrollTrigger: {
+                    trigger: card,
+                    start: "top bottom",
+                    end: "bottom top",
+                    scrub: true,
+                    invalidateOnRefresh: true,
+                  },
+                }
+              );
+            } else {
+              // Clear any transform if parallax is off
+              gsap.set(card, { y: 0 });
+            }
+          });
+
+          if (prefersReduced) {
+            gsap.set(`.${styles.irs_img}`, { clipPath: clipEnd, clearProps: "willChange" });
+            if (fadeUp)
+              gsap.set(`.${styles.irs_media}`, {
+                opacity: 1,
+                y: 0,
+                clearProps: "willChange",
+              });
           }
-        });
+        }, containerRef);
 
-        if (prefersReduced) {
-          gsap.set(`.${styles.irs_img}`, { clipPath: clipEnd, clearProps: "willChange" });
-          if (fadeUp)
-            gsap.set(`.${styles.irs_media}`, {
-              opacity: 1,
-              y: 0,
-              clearProps: "willChange",
-            });
-        }
-      }, containerRef);
+        // theme toggles → refresh
+        // (done once; ScrollTrigger.refresh already bound to triggers above)
+      };
 
-      // aggiorna su toggle tema
+      build();
+
       const onThemeChange = () => {
         if (!bgRef.current || !containerRef.current) return;
         const accent = getComputedStyle(containerRef.current)
@@ -202,12 +230,14 @@ export default function ScrollImageReveal({
         bgRef.current.style.backgroundColor = accent;
         // @ts-ignore
         const ST = (window as any)?.ScrollTrigger;
-        if (ST?.refresh) ST.refresh();
+        ST?.refresh?.();
       };
       window.addEventListener("themechange" as any, onThemeChange);
 
       return () => {
         window.removeEventListener("themechange" as any, onThemeChange);
+        bpQuery.removeEventListener?.("change", onBPChange);
+        bpQuery.removeListener?.(onBPChange);
       };
     })();
 
@@ -228,7 +258,8 @@ export default function ScrollImageReveal({
     parallaxAmount,
     parallaxEase,
     parallaxMode,
-    parallaxMobileScale,
+    parallaxMobileScale, // kept in deps for API stability
+    parallaxBreakpoint,
     colors,
   ]);
 
@@ -248,12 +279,7 @@ export default function ScrollImageReveal({
             style={{ borderRadius: radius }}
           >
             <div className={styles.irs_media} style={{ borderRadius: radius }}>
-              <img
-                className={styles.irs_img}
-                src={it.src}
-                alt={it.alt}
-                loading="lazy"
-              />
+              <img className={styles.irs_img} src={it.src} alt={it.alt} loading="lazy" />
             </div>
             {it.caption && (
               <div className={styles.irs_caption}>
